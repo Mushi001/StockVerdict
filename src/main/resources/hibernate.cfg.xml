@@ -1,0 +1,22 @@
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "https://hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/stockverdict</property>
+        <property name="hibernate.connection.username">postgres</property>
+        <property name="hibernate.connection.password">kelvin</property>
+        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.hbm2ddl.auto">update</property>
+        <mapping class="org.henriette.stockverdict.models.Users"/>
+        <mapping class="org.henriette.stockverdict.models.Customer"/>
+        <mapping class="org.henriette.stockverdict.models.Products"/>
+        <mapping class="org.henriette.stockverdict.models.SaleItem"/>
+        <mapping class="org.henriette.stockverdict.models.Sales"/>
+        <mapping class="org.henriette.stockverdict.models.StockEntry"/>
+        <mapping class="org.henriette.stockverdict.models.Supplier"/>
+        <mapping class="org.henriette.stockverdict.models.Otp"/>
+    </session-factory>
+</hibernate-configuration>
