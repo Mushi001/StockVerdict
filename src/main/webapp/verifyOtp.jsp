@@ -11,19 +11,35 @@
         :root {
             --green:      #00e676;
             --green-dim:  #00c853;
-            --bg-dark:    #040e07;
-            --bg-card:    rgba(4,18,9,0.82);
+            --green-glow: rgba(0,230,118,0.22);
+            --bg:         #040e07;
+            --bg-card:    rgba(4,18,9,0.85);
             --border:     rgba(0,230,118,0.22);
             --text:       #e4ffe4;
+            --text-sub:   #a8d4b0;
             --muted:      #5a9a6a;
+            --surface:    rgba(0,20,8,0.6);
             --red:        #ff5252;
+        }
+        [data-theme="light"] {
+            --bg:         #f0faf2;
+            --bg-card:    rgba(255,255,255,0.92);
+            --border:     rgba(0,180,80,0.2);
+            --text:       #0a2e12;
+            --text-sub:   #2d6e3e;
+            --muted:      #4a8a5a;
+            --surface:    rgba(220,245,225,0.7);
+            --green:      #00a84a;
+            --green-dim:  #007a35;
         }
         body {
             min-height: 100vh;
             display: flex; align-items: center; justify-content: center;
             font-family: 'Inter', sans-serif;
-            background: var(--bg-dark);
+            background: var(--bg);
+            color: var(--text);
             overflow: hidden; position: relative;
+            transition: background 0.3s, color 0.3s;
         }
         .bg-image {
             position: fixed; inset: 0;
@@ -93,14 +109,14 @@
         .field { margin-bottom: 18px; }
         label { display: block; font-family: 'Rajdhani', sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
         input[type="text"] {
-            width: 100%; background: rgba(0,20,8,0.7); border: 1px solid var(--border);
+            width: 100%; background: var(--surface); border: 1px solid var(--border);
             color: var(--text); font-family: 'Inter', sans-serif; font-size: 16px;
             padding: 12px 15px; outline: none;
             transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
         }
         input[type="text"]:focus {
-            border-color: var(--green); background: rgba(0,30,10,0.8);
-            box-shadow: 0 0 0 1px rgba(0,230,118,0.25), inset 0 0 12px rgba(0,230,118,0.04);
+            border-color: var(--green);
+            box-shadow: 0 0 0 1px var(--green-glow), inset 0 0 12px var(--green-glow);
         }
         input::placeholder { color: rgba(90,154,106,0.5); font-size: 13px; }
         .hint { margin-top: 8px; font-size: 12px; color: rgba(90,154,106,0.75); }
@@ -197,6 +213,32 @@
         Verification Active &nbsp;·&nbsp; Encrypted Session
     </div>
 </div>
+
+<div style="position: fixed; top: 15px; right: 20px; z-index: 500;">
+    <button id="themeToggle" onclick="toggleTheme()" style="width: 36px; height: 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">🌙</button>
+</div>
+
+<script>
+    const THEME_KEY = 'sv_theme';
+    function applyTheme(t) {
+        document.documentElement.setAttribute('data-theme', t);
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = t === 'light' ? '🌙' : '☀️';
+        localStorage.setItem(THEME_KEY, t);
+        
+        // Hide/Show background elements based on theme
+        const bgImg = document.querySelector('.bg-image');
+        const bgOverlay = document.querySelector('.bg-overlay');
+        if (bgImg) bgImg.style.display = t === 'light' ? 'none' : 'block';
+        if (bgOverlay) bgOverlay.style.display = t === 'light' ? 'none' : 'block';
+    }
+    function toggleTheme() {
+        applyTheme((document.documentElement.getAttribute('data-theme') || 'dark') === 'dark' ? 'light' : 'dark');
+    }
+    // Set initial theme
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+    applyTheme(savedTheme);
+</script>
 </body>
 </html>
 

@@ -34,10 +34,14 @@ public class Products {
     @JoinColumn(name = "user_id")
     private Users user;
 
-    @OneToMany(mappedBy = "product")
+    @ManyToOne
+    @JoinColumn(name = "supplier_id")
+    private Supplier supplier;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SaleItem> saleItems;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StockEntry> stockEntries;
 
     // Constructors
@@ -46,7 +50,7 @@ public class Products {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Products(String name, String description, String barcode, Double purchasePrice, Double sellingPrice, Integer quantityInStock, Integer reorderLevel, Users user) {
+    public Products(String name, String description, String barcode, Double purchasePrice, Double sellingPrice, Integer quantityInStock, Integer reorderLevel, Users user, Supplier supplier) {
         this.name = name;
         this.description = description;
         this.barcode = barcode;
@@ -55,6 +59,7 @@ public class Products {
         this.quantityInStock = quantityInStock;
         this.reorderLevel = reorderLevel;
         this.user = user;
+        this.supplier = supplier;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -92,6 +97,9 @@ public class Products {
 
     public Users getUser() { return user; }
     public void setUser(Users user) { this.user = user; }
+
+    public Supplier getSupplier() { return supplier; }
+    public void setSupplier(Supplier supplier) { this.supplier = supplier; }
 
     public List<SaleItem> getSaleItems() { return saleItems; }
     public void setSaleItems(List<SaleItem> saleItems) { this.saleItems = saleItems; }

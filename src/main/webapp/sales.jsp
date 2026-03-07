@@ -12,7 +12,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StockVerdict — Sales</title>
-    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/images/verdictlogo.png"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/moon.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/save.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/check.css"/>
+    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/logo2.png"/>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <style>
@@ -174,8 +177,10 @@
 <!-- ══ SIDEBAR ══ -->
 <aside class="sidebar">
     <div class="sidebar-top">
-        <img src="${pageContext.request.contextPath}/images/verdictlogo.png" class="sidebar-logo" alt="Logo"/>
-        <span class="sidebar-brand">StockVerdict</span>
+        <a href="${pageContext.request.contextPath}/traderDashboard.jsp" class="sidebar-brand">
+            <img src="${pageContext.request.contextPath}/logo2.png" class="sidebar-logo" alt="Logo"/>
+            <span class="sidebar-name">StockVerdict</span>
+        </a>
     </div>
     <div class="sidebar-user">
         <div class="sidebar-user-name">${sessionScope.currentUser.name}</div>
@@ -257,17 +262,17 @@
             </div>
             <div class="stat-card">
                 <div class="stat-lbl">Total Revenue</div>
-                <div class="stat-val">$<c:choose><c:when test="${not empty totalRevenue}"><fmt:formatNumber value="${totalRevenue}" pattern="#,##0.00"/></c:when><c:otherwise>0.00</c:otherwise></c:choose></div>
+                <div class="stat-val">Rwf <c:choose><c:when test="${not empty totalRevenue}"><fmt:formatNumber value="${totalRevenue}" pattern="#,##0.00"/></c:when><c:otherwise>0.00</c:otherwise></c:choose></div>
                 <div class="stat-hint">Gross amount</div>
             </div>
             <div class="stat-card">
                 <div class="stat-lbl">This Month</div>
-                <div class="stat-val">$<c:choose><c:when test="${not empty monthRevenue}"><fmt:formatNumber value="${monthRevenue}" pattern="#,##0.00"/></c:when><c:otherwise>0.00</c:otherwise></c:choose></div>
+                <div class="stat-val">Rwf <c:choose><c:when test="${not empty monthRevenue}"><fmt:formatNumber value="${monthRevenue}" pattern="#,##0.00"/></c:when><c:otherwise>0.00</c:otherwise></c:choose></div>
                 <div class="stat-hint">Current month</div>
             </div>
             <div class="stat-card">
                 <div class="stat-lbl">Avg Sale Value</div>
-                <div class="stat-val">$<c:choose><c:when test="${not empty avgSaleValue}"><fmt:formatNumber value="${avgSaleValue}" pattern="#,##0.00"/></c:when><c:otherwise>0.00</c:otherwise></c:choose></div>
+                <div class="stat-val">Rwf <c:choose><c:when test="${not empty avgSaleValue}"><fmt:formatNumber value="${avgSaleValue}" pattern="#,##0.00"/></c:when><c:otherwise>0.00</c:otherwise></c:choose></div>
                 <div class="stat-hint">Per transaction</div>
             </div>
         </div>
@@ -324,8 +329,8 @@
                                 <td class="td-muted"><fmt:formatDate value="${sale.saleDate}" pattern="dd MMM yyyy"/></td>
                                 <td class="td-green">${sale.saleItems[0].product.name}</td>
                                 <td>${sale.saleItems[0].quantity}</td>
-                                <td>$<fmt:formatNumber value="${sale.saleItems[0].priceAtSale}" pattern="#,##0.00"/></td>
-                                <td class="td-green">$<fmt:formatNumber value="${sale.totalAmount}" pattern="#,##0.00"/></td>
+                                <td>Rwf <fmt:formatNumber value="${sale.saleItems[0].priceAtSale}" pattern="#,##0.00"/></td>
+                                <td class="td-green">Rwf <fmt:formatNumber value="${sale.totalAmount}" pattern="#,##0.00"/></td>
                                 <td><span class="badge badge-green">${sale.paymentMethod}</span></td>
                                 <td class="td-muted"><c:choose><c:when test="${not empty sale.customer}">${sale.customer.name}</c:when><c:otherwise>—</c:otherwise></c:choose></td>
                                 <td>
@@ -351,20 +356,19 @@
             <div><div class="modal-eyebrow">New Transaction</div><div class="modal-title">Add New Sale</div></div>
             <button class="modal-close" onclick="closeModal('addModal')">✕</button>
         </div>
-        <form action="${pageContext.request.contextPath}/sale" method="post" id="addSaleForm">
+        <form action="${pageContext.request.contextPath}/sales" method="post" id="addSaleForm">
             <input type="hidden" name="action" value="addSale"/>
             <div class="modal-body">
                 <div class="field">
                     <label>Product</label>
-                    <div class="select-wrap">
-                        <select name="productId" required onchange="prefillPrice(this)">
-                            <option value="">— Select a product —</option>
+                    <div style="position:relative;">
+                        <input type="text" id="addSearchInput" list="productsList" placeholder="Type to search products..." style="width:100%; padding: 0.6rem; border:1px solid var(--border-light); border-radius:6px; background:var(--bg-mid); color:var(--text); font-family:inherit; margin-bottom: 5px;" oninput="onProductSearchSelect(this)" autocomplete="off" required>
+                        <datalist id="productsList">
                             <c:forEach var="product" items="${productList}">
-                                <option value="${product.id}" data-price="${product.sellingPrice}" data-stock="${product.quantityInStock}">
-                                        ${product.name} (Stock: ${product.quantityInStock})
-                                </option>
+                                <option value="${product.name} [ID: ${product.id}]" data-id="${product.id}" data-price="${product.sellingPrice}" data-stock="${product.quantityInStock}"></option>
                             </c:forEach>
-                        </select>
+                        </datalist>
+                        <input type="hidden" name="productId" id="hiddenProductId" required>
                     </div>
                 </div>
                 <div class="field-row">
@@ -374,7 +378,7 @@
                         <div class="field-note" id="stockNote"></div>
                     </div>
                     <div class="field">
-                        <label>Unit Price ($)</label>
+                        <label>Unit Price (Rwf)</label>
                         <input type="number" name="unitPrice" id="addPrice" step="0.01" min="0" placeholder="0.00" required oninput="calcTotal('add')"/>
                         <div class="field-note">Defaults to product price</div>
                     </div>
@@ -394,8 +398,9 @@
                     <div class="field">
                         <label>Customer (optional)</label>
                         <div class="select-wrap">
-                            <select name="customerId">
+                            <select name="customerId" id="addCustomerSelect" onchange="toggleNewCustomer()">
                                 <option value="">— Walk-in customer —</option>
+                                <option value="NEW" style="color:var(--green); font-weight:600;">+ Register New Customer</option>
                                 <c:forEach var="customer" items="${customerList}">
                                     <option value="${customer.id}">${customer.name}</option>
                                 </c:forEach>
@@ -403,9 +408,13 @@
                         </div>
                     </div>
                 </div>
+                <div class="field-row" id="newCustomerFields" style="display:none;">
+                    <div class="field"><label>New Customer Name</label><input type="text" name="newCustomerName" id="newCName"/></div>
+                    <div class="field"><label>New Customer Phone</label><input type="text" name="newCustomerPhone" id="newCPhone"/></div>
+                </div>
                 <div class="total-preview">
                     <span class="total-lbl">Total Amount</span>
-                    <span class="total-val" id="addTotal">$0.00</span>
+                    <span class="total-val" id="addTotal">Rwf 0.00</span>
                 </div>
             </div>
             <div class="modal-footer">
@@ -423,7 +432,7 @@
             <div><div class="modal-eyebrow">Update Transaction</div><div class="modal-title">Edit Sale</div></div>
             <button class="modal-close" onclick="closeModal('editModal')">✕</button>
         </div>
-        <form action="${pageContext.request.contextPath}/sale" method="post">
+        <form action="${pageContext.request.contextPath}/sales" method="post">
             <input type="hidden" name="action" value="updateSale"/>
             <input type="hidden" name="saleId" id="editSaleId"/>
             <div class="modal-body">
@@ -440,7 +449,7 @@
                 </div>
                 <div class="field-row">
                     <div class="field"><label>Quantity</label><input type="number" name="quantity" id="editQty" min="1" required oninput="calcTotal('edit')"/></div>
-                    <div class="field"><label>Unit Price ($)</label><input type="number" name="unitPrice" id="editPrice" step="0.01" min="0" required oninput="calcTotal('edit')"/></div>
+                    <div class="field"><label>Unit Price (Rwf)</label><input type="number" name="unitPrice" id="editPrice" step="0.01" min="0" required oninput="calcTotal('edit')"/></div>
                 </div>
                 <div class="field-row">
                     <div class="field">
@@ -468,7 +477,7 @@
                 </div>
                 <div class="total-preview">
                     <span class="total-lbl">Total Amount</span>
-                    <span class="total-val" id="editTotal">$0.00</span>
+                    <span class="total-val" id="editTotal">Rwf 0.00</span>
                 </div>
             </div>
             <div class="modal-footer">
@@ -486,7 +495,7 @@
             <div><div class="modal-eyebrow">Confirm Action</div><div class="modal-title">Delete Sale</div></div>
             <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
         </div>
-        <form action="${pageContext.request.contextPath}/sale" method="post">
+        <form action="${pageContext.request.contextPath}/sales" method="post">
             <input type="hidden" name="action" value="deleteSale"/>
             <input type="hidden" name="saleId" id="deleteSaleId"/>
             <div class="modal-body">
@@ -559,18 +568,48 @@
     }
 
     function prefillPrice(select) {
+        // Obsolete for Add Modal since we use datalist, but keeping for reference if Edit modal uses it
         const opt = select.options[select.selectedIndex];
-        const price = opt.getAttribute('data-price') || '';
-        const stock = opt.getAttribute('data-stock') || '';
-        document.getElementById('addPrice').value = price ? parseFloat(price).toFixed(2) : '';
-        document.getElementById('stockNote').textContent = stock ? 'Available: ' + stock + ' units' : '';
-        calcTotal('add');
+        const price = opt ? (opt.getAttribute('data-price') || '') : '';
+        const stock = opt ? (opt.getAttribute('data-stock') || '') : '';
+        if (document.getElementById('editPrice')) document.getElementById('editPrice').value = price ? parseFloat(price).toFixed(2) : '';
+        calcTotal('edit');
+    }
+
+    function onProductSearchSelect(input) {
+        let val = input.value;
+        let dataList = document.getElementById('productsList');
+        let options = dataList.options;
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value === val) {
+                document.getElementById('hiddenProductId').value = options[i].getAttribute('data-id');
+                let price = options[i].getAttribute('data-price') || '';
+                let stock = options[i].getAttribute('data-stock') || '';
+                document.getElementById('addPrice').value = price ? parseFloat(price).toFixed(2) : '';
+                document.getElementById('stockNote').textContent = stock ? 'Available: ' + stock + ' units' : '';
+                calcTotal('add');
+                return;
+            }
+        }
+        document.getElementById('hiddenProductId').value = '';
+    }
+
+    function toggleNewCustomer() {
+        let sel = document.getElementById('addCustomerSelect');
+        let fields = document.getElementById('newCustomerFields');
+        if (sel.value === 'NEW') {
+            fields.style.display = 'flex';
+            document.getElementById('newCName').required = true;
+        } else {
+            fields.style.display = 'none';
+            document.getElementById('newCName').required = false;
+        }
     }
 
     function calcTotal(mode) {
         const qty   = parseFloat(document.getElementById(mode+'Qty').value)   || 0;
         const price = parseFloat(document.getElementById(mode+'Price').value) || 0;
-        document.getElementById(mode+'Total').textContent = '$' + (qty*price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+        document.getElementById(mode+'Total').textContent = 'Rwf ' + (qty*price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
     }
 
     function updateClock() {

@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/brightness.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/moon.css"/>
 
-    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/images/verdictlogo.png"/>
+    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/logo2.png"/>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
@@ -119,27 +119,27 @@
         /* ── Left panel ── */
         .left-panel {
             width: 340px; flex-shrink: 0;
-            background: linear-gradient(160deg, #061409 0%, #030c06 100%);
+            background: linear-gradient(rgba(4,14,7,0.8), rgba(4,14,7,0.85)), url('${pageContext.request.contextPath}/signup.jpg') center/cover;
             border-right: 1px solid var(--border);
             padding: 44px 36px;
-            display: flex; flex-direction: column; align-items: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             position: relative; overflow: hidden;
-            transition: background 0.3s, border-color 0.3s;
+            transition: border-color 0.3s;
         }
         [data-theme="light"] .left-panel {
-            background: linear-gradient(160deg, #d4f0dc 0%, #e8f8ee 100%);
+            background: linear-gradient(rgba(240,250,242,0.85), rgba(240,250,242,0.9)), url('${pageContext.request.contextPath}/signup.jpg') center/cover;
         }
         .left-panel::before {
             content: ''; position: absolute;
             width: 260px; height: 260px; border-radius: 50%;
             background: radial-gradient(circle, rgba(0,230,118,0.1) 0%, transparent 70%);
-            top: 60px; left: 50%; transform: translateX(-50%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
             pointer-events: none;
         }
 
-        .logo-container { position: relative; z-index: 1; margin-bottom: 28px; text-align: center; }
+        .logo-container { position: relative; z-index: 1; text-align: center; }
         .logo-img-wrap {
-            width: 120px; height: 120px; margin: 0 auto 16px;
+            width: 70px; height: 70px; margin: 0 auto 16px;
             border-radius: 50%;
             background: rgba(0,230,118,0.06); border: 2px solid rgba(0,230,118,0.2);
             display: flex; align-items: center; justify-content: center;
@@ -147,21 +147,27 @@
             animation: logoPulse 3s ease infinite; overflow: hidden;
         }
         @keyframes logoPulse {
-            0%, 100% { box-shadow: 0 0 30px rgba(0,230,118,0.15), 0 0 60px rgba(0,230,118,0.06); }
-            50%       { box-shadow: 0 0 40px rgba(0,230,118,0.28), 0 0 80px rgba(0,230,118,0.1); }
+            0%, 100% { box-shadow: 0 0 20px rgba(0,230,118,0.15), 0 0 40px rgba(0,230,118,0.06); }
+            50%       { box-shadow: 0 0 30px rgba(0,230,118,0.28), 0 0 50px rgba(0,230,118,0.1); }
         }
-        .logo-img-wrap img { width: 96px; height: 96px; object-fit: contain; }
+        .logo-img-wrap img { width: 44px; height: 44px; object-fit: contain; }
 
         .brand-name {
-            font-family: 'Rajdhani', sans-serif; font-size: 30px; font-weight: 700;
+            font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700;
             color: var(--green); letter-spacing: 0.06em; text-transform: uppercase;
             text-shadow: 0 0 24px rgba(0,230,118,0.4); line-height: 1;
         }
         [data-theme="light"] .brand-name { text-shadow: 0 0 16px rgba(0,168,74,0.3); }
-        .brand-line { width: 50px; height: 2px; background: var(--green); margin: 8px auto; box-shadow: 0 0 8px var(--green); }
+        .brand-line { width: 40px; height: 2px; background: var(--green); margin: 8px auto; box-shadow: 0 0 8px var(--green); }
         .brand-sub { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); font-family: 'Rajdhani', sans-serif; }
 
-        .features { margin-top: 36px; width: 100%; }
+        .back-btn {
+            position: absolute; top: 24px; left: 40px;
+            font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600;
+            color: var(--muted); text-decoration: none;
+            transition: color 0.2s; z-index: 50; text-transform: uppercase; letter-spacing: 0.1em;
+        }
+        .back-btn:hover { color: var(--green); }
         .feature-item {
             display: flex; align-items: flex-start; gap: 12px;
             padding: 12px 0; border-bottom: 1px solid rgba(0,230,118,0.08);
@@ -299,53 +305,17 @@
     <div class="left-panel">
         <div class="logo-container">
             <div class="logo-img-wrap">
-                <img src="${pageContext.request.contextPath}/images/verdictlogo.png" alt="StockVerdict Logo"/>
+                <img src="${pageContext.request.contextPath}/logo2.png" alt="StockVerdict Logo"/>
             </div>
             <div class="brand-name">StockVerdict</div>
             <div class="brand-line"></div>
             <div class="brand-sub">Intelligent Market Analysis</div>
         </div>
-
-        <div class="features">
-            <div class="feature-item">
-                <div class="feature-icon">📈</div>
-                <div class="feature-text">
-                    <div class="feature-title">Real-Time Portfolio Tracking</div>
-                    <div class="feature-desc">Monitor your investments live with instant market data.</div>
-                </div>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon">🔔</div>
-                <div class="feature-text">
-                    <div class="feature-title">Smart Price Alerts</div>
-                    <div class="feature-desc">Get notified when stocks hit your target price.</div>
-                </div>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon">📊</div>
-                <div class="feature-text">
-                    <div class="feature-title">Advanced Analytics</div>
-                    <div class="feature-desc">Deep insights and charts to inform every trade.</div>
-                </div>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon">🔒</div>
-                <div class="feature-text">
-                    <div class="feature-title">Bank-Grade Security</div>
-                    <div class="feature-desc">Your data is encrypted and always protected.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="market-stats">
-            <div class="mstat"><span class="mstat-val">12K+</span><span class="mstat-label">Traders</span></div>
-            <div class="mstat"><span class="mstat-val">$2.4B</span><span class="mstat-label">Volume</span></div>
-            <div class="mstat"><span class="mstat-val">99.9%</span><span class="mstat-label">Uptime</span></div>
-        </div>
     </div>
 
     <!-- RIGHT PANEL -->
     <div class="right-panel">
+        <a href="javascript:history.back()" class="back-btn">← Back</a>
         <div class="form-header">
             <div class="form-label-top">New Account</div>
             <div class="form-title">Create Your Account</div>

@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard — StockVerdict</title>
-    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/images/verdictlogo.png"/>
+    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/logo2.png"/>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
@@ -16,7 +16,9 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/moon.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/growth.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/handshake.css"/>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/lock.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/chart.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/edit.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/delete.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/package.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/palette.css"/>
 
@@ -346,9 +348,9 @@
 
 <!-- ═══════════════ SIDEBAR ═══════════════ -->
 <aside class="sidebar" id="sidebar">
-    <a href="${pageContext.request.contextPath}/index.jsp" class="sidebar-brand">
-        <img src="${pageContext.request.contextPath}/images/verdictlogo.png" class="sidebar-logo" alt="Logo"/>
-        <span class="sidebar-name">StockVerdict</span>
+    <a href="${pageContext.request.contextPath}/adminDashboard.jsp" class="sidebar-brand">
+        <img src="${pageContext.request.contextPath}/logo2.png" class="sidebar-logo" alt="Logo"/>
+        <span class="sidebar-name">StockVerdict Admin</span>
     </a>
 
     <div class="sidebar-section">Overview</div>
@@ -702,7 +704,7 @@
             data: {
                 labels,
                 datasets: [{
-                    label: 'Sales ($)',
+                    label: 'Sales (Rwf)',
                     data,
                     borderColor: color,
                     backgroundColor: color.replace('1)', '0.08)'),

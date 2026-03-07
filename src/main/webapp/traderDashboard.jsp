@@ -13,11 +13,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StockVerdict — Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/images/verdictlogo.png"/>
+    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/logo2.png"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/edit.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/delete.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/money.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
         :root {
             --green:      #00e676;
             --green-dim:  #00c853;
@@ -336,10 +338,10 @@
 <body>
 
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-top">
-        <img src="${pageContext.request.contextPath}/images/verdictlogo.png" class="sidebar-logo" alt="Logo"/>
-        <span class="sidebar-brand">StockVerdict</span>
-    </div>
+    <a href="${pageContext.request.contextPath}/traderDashboard.jsp" class="sidebar-brand">
+        <img src="${pageContext.request.contextPath}/logo2.png" class="sidebar-logo" alt="Logo"/>
+        <span class="sidebar-name">StockVerdict</span>
+    </a>
     <div class="sidebar-user">
         <div class="sidebar-user-name">${sessionScope.currentUser.name}</div>
         <div class="sidebar-user-role">${sessionScope.currentUser.role}</div>
@@ -404,7 +406,16 @@
         <c:if test="${not empty param.success}">
             <div class="alert alert-success"><i class="fas fa-check-circle"></i> Operation completed successfully.</div>
         </c:if>
-        <c:if test="${not empty param.error}">
+        <c:if test="${param.error == 'invalidPrice'}">
+            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Error: Selling Price cannot be lower than Cost Price.</div>
+        </c:if>
+        <c:if test="${param.error == 'barcodeExists'}">
+            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Error: A product with this barcode already exists.</div>
+        </c:if>
+        <c:if test="${param.error == 'supplierEmailExists'}">
+            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Error: A supplier with this email already exists.</div>
+        </c:if>
+        <c:if test="${not empty param.error && param.error != 'invalidPrice' && param.error != 'barcodeExists' && param.error != 'supplierEmailExists'}">
             <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> An error occurred. Please try again.</div>
         </c:if>
 
@@ -424,7 +435,7 @@
             </div>
             <div class="stat-card">
                 <div class="stat-lbl">Revenue</div>
-                <div class="stat-val">$<c:choose><c:when test="${not empty totalRevenue}"><fmt:formatNumber value="${totalRevenue}" pattern="#,##0"/></c:when><c:otherwise>0</c:otherwise></c:choose></div>
+                <div class="stat-val">Rwf <c:choose><c:when test="${not empty totalRevenue}"><fmt:formatNumber value="${totalRevenue}" pattern="#,##0"/></c:when><c:otherwise>0</c:otherwise></c:choose></div>
                 <div class="stat-hint">Gross earnings</div>
             </div>
             <div class="stat-card">
@@ -463,7 +474,7 @@
                                 <td class="td-muted"><fmt:formatDate value="${s.saleDate}" pattern="dd MMM yyyy"/></td>
                                 <td class="td-green">${s.saleItems[0].product.name}</td>
                                 <td>${s.saleItems[0].quantity}</td>
-                                <td class="td-green">$<fmt:formatNumber value="${s.totalAmount}" pattern="#,##0.00"/></td>
+                                <td class="td-green">Rwf <fmt:formatNumber value="${s.totalAmount}" pattern="#,##0.00"/></td>
                                 <td><span class="badge badge-green">Completed</span></td>
                             </tr>
                         </c:forEach>
@@ -503,7 +514,7 @@
             </div>
             <div class="stat-card">
                 <div class="stat-lbl">Stock Value</div>
-                <div class="stat-val">$<c:choose><c:when test="${not empty totalStockValue}"><fmt:formatNumber value="${totalStockValue}" pattern="#,##0"/></c:when><c:otherwise>0</c:otherwise></c:choose></div>
+                <div class="stat-val">Rwf <c:choose><c:when test="${not empty totalStockValue}"><fmt:formatNumber value="${totalStockValue}" pattern="#,##0"/></c:when><c:otherwise>0</c:otherwise></c:choose></div>
                 <div class="stat-hint">At cost price</div>
             </div>
         </div>
@@ -519,15 +530,15 @@
                 </c:when>
                 <c:otherwise>
                     <table>
-                        <thead><tr><th>#</th><th>Name</th><th>Category</th><th>Cost</th><th>Price</th><th>Stock</th><th>Supplier</th><th>Status</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>#</th><th>Name</th><th>Barcode</th><th>Cost</th><th>Price</th><th>Stock</th><th>Reorder Level</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
                         <c:forEach var="p" items="${productList}" varStatus="vs">
                             <tr>
                                 <td class="td-muted">${vs.count}</td>
                                 <td class="td-green">${p.name}</td>
-                                <td class="td-muted">${p.category}</td>
-                                <td>$<fmt:formatNumber value="${p.costPrice}" pattern="#,##0.00"/></td>
-                                <td class="td-green">$<fmt:formatNumber value="${p.sellingPrice}" pattern="#,##0.00"/></td>
+                                <td class="td-muted">${p.barcode}</td>
+                                <td>Rwf <fmt:formatNumber value="${p.purchasePrice}" pattern="#,##0.00"/></td>
+                                <td class="td-green">Rwf <fmt:formatNumber value="${p.sellingPrice}" pattern="#,##0.00"/></td>
                                 <td>
                                     <c:choose>
                                         <c:when test="${p.quantityInStock == 0}"><span style="color:var(--red)">${p.quantityInStock}</span></c:when>
@@ -535,7 +546,7 @@
                                         <c:otherwise>${p.quantityInStock}</c:otherwise>
                                     </c:choose>
                                 </td>
-                                <td class="td-muted">${p.supplier.name}</td>
+                                <td class="td-muted">${p.reorderLevel}</td>
                                 <td>
                                     <c:choose>
                                         <c:when test="${p.quantityInStock == 0}"><span class="badge badge-red">Out of Stock</span></c:when>
@@ -545,7 +556,7 @@
                                 </td>
                                 <td>
                                     <div class="action-btns">
-                                        <button class="btn-edit" onclick="openEditProductModal('${p.id}','${p.name}','${p.category}','${p.costPrice}','${p.sellingPrice}','${p.quantityInStock}','${p.supplier.id}')">Edit</button>
+                                        <button class="btn-edit" onclick="openEditProductModal('${p.id}','${p.name}','${p.barcode}','${p.purchasePrice}','${p.sellingPrice}','${p.quantityInStock}','${p.reorderLevel}','${p.supplier != null ? p.supplier.id : ''}')">Edit</button>
                                         <button class="btn-del"  onclick="openDeleteProductModal('${p.id}','${p.name}')">Delete</button>
                                     </div>
                                 </td>
@@ -577,12 +588,12 @@
             </div>
             <div class="stat-card">
                 <div class="stat-lbl">Total Owed</div>
-                <div class="stat-val" style="color:var(--red);">$<c:choose><c:when test="${not empty totalOwed}"><fmt:formatNumber value="${totalOwed}" pattern="#,##0"/></c:when><c:otherwise>0</c:otherwise></c:choose></div>
+                <div class="stat-val" style="color:var(--red);">Rwf <c:choose><c:when test="${not empty totalOwed}"><fmt:formatNumber value="${totalOwed}" pattern="#,##0"/></c:when><c:otherwise>0</c:otherwise></c:choose></div>
                 <div class="stat-hint">Outstanding balance</div>
             </div>
             <div class="stat-card">
                 <div class="stat-lbl">Paid This Month</div>
-                <div class="stat-val">$<c:choose><c:when test="${not empty paidThisMonth}"><fmt:formatNumber value="${paidThisMonth}" pattern="#,##0"/></c:when><c:otherwise>0</c:otherwise></c:choose></div>
+                <div class="stat-val">Rwf <c:choose><c:when test="${not empty paidThisMonth}"><fmt:formatNumber value="${paidThisMonth}" pattern="#,##0"/></c:when><c:otherwise>0</c:otherwise></c:choose></div>
                 <div class="stat-hint">Cleared balances</div>
             </div>
             <div class="stat-card">
@@ -614,8 +625,8 @@
                                 <td class="td-muted">${sup.email}</td>
                                 <td>
                                     <c:choose>
-                                        <c:when test="${sup.balanceOwed > 0}"><span style="color:var(--red);">$<fmt:formatNumber value="${sup.balanceOwed}" pattern="#,##0.00"/></span></c:when>
-                                        <c:otherwise><span style="color:var(--green);">$0.00</span></c:otherwise>
+                                        <c:when test="${sup.balanceOwed > 0}"><span style="color:var(--red);">Rwf <fmt:formatNumber value="${sup.balanceOwed}" pattern="#,##0.00"/></span></c:when>
+                                        <c:otherwise><span style="color:var(--green);">Rwf 0.00</span></c:otherwise>
                                     </c:choose>
                                 </td>
                                 <td>
@@ -722,30 +733,29 @@
             <div><div class="modal-eyebrow">Inventory</div><div class="modal-title">Add New Product</div></div>
             <button class="modal-close" onclick="closeModal('addProductModal')">✕</button>
         </div>
-        <form action="${pageContext.request.contextPath}/product" method="post">
+        <form action="${pageContext.request.contextPath}/products" method="post" onsubmit="return validateProductForm(this)">
             <input type="hidden" name="action" value="addProduct"/>
             <div class="modal-body">
                 <div class="field-row">
                     <div class="field"><label>Product Name</label><input type="text" name="name" placeholder="e.g. Laptop Pro X" required/></div>
-                    <div class="field"><label>Category</label><input type="text" name="category" placeholder="e.g. Electronics"/></div>
+                    <div class="field"><label>Barcode (optional)</label><input type="text" name="barcode" placeholder="e.g. 123456789"/></div>
+                </div>
+                <div class="field">
+                    <label>Supplier</label>
+                    <select name="supplierId" required style="width:100%; padding:0.6rem; border:1px solid var(--border-light); border-radius:6px; background:var(--bg-mid); color:var(--text); font-family:inherit;">
+                        <option value="">Select a Supplier...</option>
+                        <c:forEach var="sup" items="${supplierList}">
+                            <option value="${sup.id}">${sup.name}</option>
+                        </c:forEach>
+                    </select>
                 </div>
                 <div class="field-row">
-                    <div class="field"><label>Cost Price ($)</label><input type="number" name="costPrice" step="0.01" min="0" placeholder="0.00" required/></div>
-                    <div class="field"><label>Selling Price ($)</label><input type="number" name="sellingPrice" step="0.01" min="0" placeholder="0.00" required/></div>
+                    <div class="field"><label>Cost Price (Rwf)</label><input type="number" name="purchasePrice" step="0.01" min="0" placeholder="0.00" required/></div>
+                    <div class="field"><label>Selling Price (Rwf)</label><input type="number" name="sellingPrice" step="0.01" min="0" placeholder="0.00" required/></div>
                 </div>
                 <div class="field-row">
                     <div class="field"><label>Stock Quantity</label><input type="number" name="quantityInStock" min="0" placeholder="0" required/></div>
-                    <div class="field">
-                        <label>Supplier</label>
-                        <div class="select-wrap">
-                            <select name="supplierId">
-                                <option value="">— No Supplier —</option>
-                                <c:forEach var="sup" items="${supplierList}">
-                                    <option value="${sup.id}">${sup.name}</option>
-                                </c:forEach>
-                            </select>
-                        </div>
-                    </div>
+                    <div class="field"><label>Reorder Level</label><input type="number" name="reorderLevel" min="0" placeholder="10" required/></div>
                 </div>
                 <div class="field"><label>Description (optional)</label><textarea name="description" rows="2" placeholder="Brief product description..."></textarea></div>
             </div>
@@ -764,32 +774,32 @@
             <div><div class="modal-eyebrow">Inventory</div><div class="modal-title">Edit Product</div></div>
             <button class="modal-close" onclick="closeModal('editProductModal')">✕</button>
         </div>
-        <form action="${pageContext.request.contextPath}/product" method="post">
+        <form action="${pageContext.request.contextPath}/products" method="post" onsubmit="return validateProductForm(this)">
             <input type="hidden" name="action" value="updateProduct"/>
-            <input type="hidden" name="productId" id="editProductId"/>
+            <input type="hidden" name="id" id="editProductId"/>
             <div class="modal-body">
                 <div class="field-row">
                     <div class="field"><label>Product Name</label><input type="text" name="name" id="editProductName" required/></div>
-                    <div class="field"><label>Category</label><input type="text" name="category" id="editProductCategory"/></div>
+                    <div class="field"><label>Barcode (optional)</label><input type="text" name="barcode" id="editProductBarcode"/></div>
+                </div>
+                <div class="field">
+                    <label>Supplier</label>
+                    <select name="supplierId" id="editProductSupplier" required style="width:100%; padding:0.6rem; border:1px solid var(--border-light); border-radius:6px; background:var(--bg-mid); color:var(--text); font-family:inherit;">
+                        <option value="">Select a Supplier...</option>
+                        <c:forEach var="sup" items="${supplierList}">
+                            <option value="${sup.id}">${sup.name}</option>
+                        </c:forEach>
+                    </select>
                 </div>
                 <div class="field-row">
-                    <div class="field"><label>Cost Price ($)</label><input type="number" name="costPrice" id="editCostPrice" step="0.01" min="0" required/></div>
-                    <div class="field"><label>Selling Price ($)</label><input type="number" name="sellingPrice" id="editSellingPrice" step="0.01" min="0" required/></div>
+                    <div class="field"><label>Cost Price (Rwf)</label><input type="number" name="purchasePrice" id="editCostPrice" step="0.01" min="0" required/></div>
+                    <div class="field"><label>Selling Price (Rwf)</label><input type="number" name="sellingPrice" id="editSellingPrice" step="0.01" min="0" required/></div>
                 </div>
                 <div class="field-row">
                     <div class="field"><label>Stock Quantity</label><input type="number" name="quantityInStock" id="editStockQty" min="0" required/></div>
-                    <div class="field">
-                        <label>Supplier</label>
-                        <div class="select-wrap">
-                            <select name="supplierId" id="editProductSupplier">
-                                <option value="">— No Supplier —</option>
-                                <c:forEach var="sup" items="${supplierList}">
-                                    <option value="${sup.id}">${sup.name}</option>
-                                </c:forEach>
-                            </select>
-                        </div>
-                    </div>
+                    <div class="field"><label>Reorder Level</label><input type="number" name="reorderLevel" id="editProductReorder" min="0" required/></div>
                 </div>
+                <div class="field"><label>Description (optional)</label><textarea name="description" id="editProductDesc" rows="2"></textarea></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeModal('editProductModal')">Cancel</button>
@@ -843,7 +853,7 @@
                 </div>
                 <div class="field-row">
                     <div class="field"><label>Address</label><input type="text" name="address" placeholder="Kigali, Rwanda"/></div>
-                    <div class="field"><label>Opening Balance Owed ($)</label><input type="number" name="balanceOwed" step="0.01" min="0" value="0.00"/></div>
+                    <div class="field"><label>Opening Balance Owed (Rwf)</label><input type="number" name="balanceOwed" step="0.01" min="0" value="0.00"/></div>
                 </div>
                 <div class="field"><label>Notes (optional)</label><textarea name="notes" rows="2" placeholder="Any additional information..."></textarea></div>
             </div>
@@ -874,7 +884,7 @@
                     <div class="field"><label>Phone</label><input type="text" name="phone" id="editSupplierPhone"/></div>
                     <div class="field"><label>Email</label><input type="email" name="email" id="editSupplierEmail"/></div>
                 </div>
-                <div class="field"><label>Balance Owed ($)</label><input type="number" name="balanceOwed" id="editSupplierBalance" step="0.01" min="0"/></div>
+                <div class="field"><label>Balance Owed (Rwf)</label><input type="number" name="balanceOwed" id="editSupplierBalance" step="0.01" min="0"/></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeModal('editSupplierModal')">Cancel</button>
@@ -961,15 +971,16 @@
     function openLogoutModal() { openModal('logoutModal'); }
 
     function openAddProductModal() { openModal('addProductModal'); }
-    function openEditProductModal(id, name, cat, cost, sell, qty, supId) {
+    function openEditProductModal(id, name, barcode, purchasePrice, sell, qty, reorder, supplierId) {
         document.getElementById('editProductId').value       = id;
         document.getElementById('editProductName').value     = name;
-        document.getElementById('editProductCategory').value = cat;
-        document.getElementById('editCostPrice').value       = cost;
+        document.getElementById('editProductBarcode').value  = barcode;
+        document.getElementById('editCostPrice').value       = purchasePrice;
         document.getElementById('editSellingPrice').value    = sell;
         document.getElementById('editStockQty').value        = qty;
-        const sel = document.getElementById('editProductSupplier');
-        for (let o of sel.options) { if (o.value == supId) { o.selected = true; break; } }
+        document.getElementById('editProductReorder').value  = reorder;
+        document.getElementById('editProductSupplier').value = supplierId;
+        // Optionally fetch and set description here if it starts being passed, currently omitted for safety
         openModal('editProductModal');
     }
     function openDeleteProductModal(id, name) {
@@ -1006,6 +1017,28 @@
             setTimeout(() => el.remove(), 500);
         });
     }, 5000);
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const params = new URLSearchParams(window.location.search);
+        const success = params.get('success');
+        const error = params.get('error');
+
+        if (success === 'productAdded' || success === 'productUpdated' || success === 'productDeleted' || success === 'addFailed' || error === 'invalidPrice' || error === 'barcodeExists') {
+            showSection('stock', document.querySelector('.nav-item[onclick*="stock"]'));
+        } else if (success === 'supplierAdded' || success === 'supplierUpdated' || success === 'supplierDeleted' || error === 'supplierEmailExists') {
+            showSection('suppliers', document.querySelector('.nav-item[onclick*="suppliers"]'));
+        }
+    });
+
+    function validateProductForm(formObj) {
+        const purchase = parseFloat(formObj.elements['purchasePrice'].value);
+        const selling = parseFloat(formObj.elements['sellingPrice'].value);
+        if (selling < purchase) {
+            alert('Selling Price cannot be lower than Purchase Price.');
+            return false;
+        }
+        return true;
+    }
 </script>
 </body>
 </html>

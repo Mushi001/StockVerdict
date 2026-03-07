@@ -31,7 +31,7 @@ public class SaleServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String action = req.getParameter("action");
-        Users loggedInUser = (Users) req.getSession().getAttribute("user");
+        Users loggedInUser = (Users) req.getSession().getAttribute("currentUser");
 
         if (loggedInUser == null) {
             resp.sendRedirect(req.getContextPath() + "/login.jsp");
@@ -81,7 +81,7 @@ public class SaleServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String action = req.getParameter("action");
-        Users loggedInUser = (Users) req.getSession().getAttribute("user");
+        Users loggedInUser = (Users) req.getSession().getAttribute("currentUser");
 
         if (loggedInUser == null) {
             resp.sendRedirect(req.getContextPath() + "/login.jsp");
@@ -100,7 +100,16 @@ public class SaleServlet extends HttpServlet {
                 String customerIdParam = req.getParameter("customerId");
                 Customer customer = null;
                 if (customerIdParam != null && !customerIdParam.isBlank()) {
-                    customer = customerService.getCustomerById(Long.parseLong(customerIdParam));
+                    if (customerIdParam.equals("NEW")) {
+                        String newName = req.getParameter("newCustomerName");
+                        String newPhone = req.getParameter("newCustomerPhone");
+                        if (newName != null && !newName.isBlank()) {
+                            customer = new Customer(newName, newPhone, "", "", loggedInUser);
+                            customerService.addCustomer(customer);
+                        }
+                    } else {
+                        customer = customerService.getCustomerById(Long.parseLong(customerIdParam));
+                    }
                 }
 
                 String paymentMethod = req.getParameter("paymentMethod");

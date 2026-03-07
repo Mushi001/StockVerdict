@@ -14,7 +14,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StockVerdict — Inventory Management</title>
-    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/images/verdictlogo.png"/>
+    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/logo2.png"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/group.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/rocket.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <style>
@@ -361,10 +363,10 @@
 
 <!-- Navigation Bar -->
 <nav class="navbar">
-    <div class="navbar-left">
-        <img src="${pageContext.request.contextPath}/images/verdictlogo.png" alt="Logo" class="navbar-logo"/>
-        <div class="navbar-brand">StockVerdict</div>
-    </div>
+    <a href="#" class="navbar-brand">
+        <img src="${pageContext.request.contextPath}/logo2.png" alt="Logo" class="navbar-logo"/>
+        <span class="navbar-name">StockVerdict</span>
+    </a>
     <div class="navbar-right">
         <c:choose>
             <c:when test="${not empty sessionScope.user}">

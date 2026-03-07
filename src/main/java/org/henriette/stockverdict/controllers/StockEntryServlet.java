@@ -27,7 +27,7 @@ public class StockEntryServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String action = req.getParameter("action");
-        Users loggedInUser = (Users) req.getSession().getAttribute("user");
+        Users loggedInUser = (Users) req.getSession().getAttribute("currentUser");
 
         if (loggedInUser == null) {
             resp.sendRedirect(req.getContextPath() + "/login.jsp");
@@ -41,7 +41,7 @@ public class StockEntryServlet extends HttpServlet {
             case "list":
                 req.setAttribute("stockEntries", stockEntryService.getStockEntriesByUser(loggedInUser));
                 req.setAttribute("products",     productService.getProductsByUser(loggedInUser));
-                req.setAttribute("suppliers",    supplierService.getSuppliersByUser(loggedInUser));
+                req.setAttribute("supplierList",    supplierService.getSuppliersByUser(loggedInUser));
                 req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
                 break;
 
@@ -77,7 +77,7 @@ public class StockEntryServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String action = req.getParameter("action");
-        Users loggedInUser = (Users) req.getSession().getAttribute("user");
+        Users loggedInUser = (Users) req.getSession().getAttribute("currentUser");
 
         if (loggedInUser == null) {
             resp.sendRedirect(req.getContextPath() + "/login.jsp");

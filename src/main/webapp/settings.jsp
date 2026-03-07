@@ -12,7 +12,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StockVerdict — Settings</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/images/verdictlogo.png"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/moon.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/save.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/check.css"/>
+    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/logo2.png"/>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -150,8 +153,10 @@
 
 <aside class="sidebar">
     <div class="sidebar-top">
-        <img src="${pageContext.request.contextPath}/images/verdictlogo.png" class="sidebar-logo" alt="Logo"/>
-        <span class="sidebar-brand">StockVerdict</span>
+        <a href="${pageContext.request.contextPath}/traderDashboard.jsp" class="sidebar-brand">
+            <img src="${pageContext.request.contextPath}/logo2.png" class="sidebar-logo" alt="Logo"/>
+            <span class="sidebar-name">StockVerdict</span>
+        </a>
     </div>
     <div class="sidebar-user">
         <div class="sidebar-user-name">${sessionScope.currentUser.name}</div>

@@ -21,7 +21,7 @@ public class CustomerServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String action = req.getParameter("action");
-        Users loggedInUser = (Users) req.getSession().getAttribute("user");
+        Users loggedInUser = (Users) req.getSession().getAttribute("currentUser");
 
         if (loggedInUser == null) {
             resp.sendRedirect(req.getContextPath() + "/login.jsp");
@@ -64,7 +64,7 @@ public class CustomerServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String action = req.getParameter("action");
-        Users loggedInUser = (Users) req.getSession().getAttribute("user");
+        Users loggedInUser = (Users) req.getSession().getAttribute("currentUser");
 
         if (loggedInUser == null) {
             resp.sendRedirect(req.getContextPath() + "/login.jsp");

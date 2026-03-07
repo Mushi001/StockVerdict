@@ -25,7 +25,7 @@ public class ProductService {
             product.setCreatedAt(LocalDateTime.now());
             product.setUpdatedAt(LocalDateTime.now());
 
-            session.persist(product);
+            session.merge(product);
             transaction.commit();
 
             return true;

@@ -159,17 +159,26 @@ public class UserService {
 
     public boolean sendOtpEmail(String recipientEmail, String otpCode) {
 
-        // Load from config.properties
+        // Load from config.local.properties (preferred) or config.properties
         Properties config = new Properties();
-        try (InputStream input = getClass().getClassLoader()
-                .getResourceAsStream("config.properties")) {
+        String localConfig = "config.local.properties";
+        String defaultConfig = "config.properties";
+
+        try {
+            InputStream input = getClass().getClassLoader().getResourceAsStream(localConfig);
             if (input == null) {
-                System.err.println("config.properties not found!");
+                input = getClass().getClassLoader().getResourceAsStream(defaultConfig);
+            }
+
+            if (input != null) {
+                config.load(input);
+                input.close();
+            } else {
+                System.err.println("Configuration file not found (tried " + localConfig + " and " + defaultConfig + ")");
                 return false;
             }
-            config.load(input);
         } catch (IOException e) {
-            System.err.println("Failed to load config.properties");
+            System.err.println("Failed to load configuration");
             e.printStackTrace();
             return false;
         }

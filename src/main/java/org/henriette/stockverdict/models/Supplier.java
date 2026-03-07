@@ -18,6 +18,10 @@ public class Supplier {
     private String email;
     private String address;
 
+    private String contactPerson;
+    private double balanceOwed;
+    private String notes;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users user;
@@ -25,14 +29,20 @@ public class Supplier {
     @OneToMany(mappedBy = "supplier")
     private List<StockEntry> stockEntries;
 
+    @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Products> products;
+
     // Constructors
     public Supplier() {}
 
-    public Supplier(String name, String phone, String email, String address, Users user) {
+    public Supplier(String name, String phone, String email, String address, String contactPerson, double balanceOwed, String notes, Users user) {
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
+        this.contactPerson = contactPerson;
+        this.balanceOwed = balanceOwed;
+        this.notes = notes;
         this.user = user;
     }
 
@@ -52,9 +62,21 @@ public class Supplier {
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
 
+    public String getContactPerson() { return contactPerson; }
+    public void setContactPerson(String contactPerson) { this.contactPerson = contactPerson; }
+
+    public double getBalanceOwed() { return balanceOwed; }
+    public void setBalanceOwed(double balanceOwed) { this.balanceOwed = balanceOwed; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
     public Users getUser() { return user; }
     public void setUser(Users user) { this.user = user; }
 
     public List<StockEntry> getStockEntries() { return stockEntries; }
     public void setStockEntries(List<StockEntry> stockEntries) { this.stockEntries = stockEntries; }
+
+    public List<Products> getProducts() { return products; }
+    public void setProducts(List<Products> products) { this.products = products; }
 }

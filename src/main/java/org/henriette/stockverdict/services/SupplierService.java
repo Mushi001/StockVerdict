@@ -20,14 +20,28 @@ public class SupplierService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             transaction = session.beginTransaction();
+            
+            // Re-attach detached user entity from HTTP session to current Hibernate Session
+            if (supplier.getUser() != null && supplier.getUser().getId() != null) {
+                Users managedUser = session.get(Users.class, supplier.getUser().getId());
+                supplier.setUser(managedUser);
+            }
+            
             session.persist(supplier);
             transaction.commit();
 
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            System.err.println("Error adding supplier:");
             e.printStackTrace();
+            if (transaction != null) {
+                try {
+                    transaction.rollback();
+                } catch (Exception rbe) {
+                    System.err.println("Rollback also failed: " + rbe.getMessage());
+                }
+            }
             return false;
         }
     }
@@ -47,6 +61,9 @@ public class SupplierService {
             existing.setPhone(updatedSupplier.getPhone());
             existing.setEmail(updatedSupplier.getEmail());
             existing.setAddress(updatedSupplier.getAddress());
+            existing.setContactPerson(updatedSupplier.getContactPerson());
+            existing.setBalanceOwed(updatedSupplier.getBalanceOwed());
+            existing.setNotes(updatedSupplier.getNotes());
 
             session.merge(existing);
             transaction.commit();
@@ -54,8 +71,15 @@ public class SupplierService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            System.err.println("Error updating supplier:");
             e.printStackTrace();
+            if (transaction != null) {
+                try {
+                    transaction.rollback();
+                } catch (Exception rbe) {
+                    System.err.println("Rollback also failed: " + rbe.getMessage());
+                }
+            }
             return false;
         }
     }
@@ -77,8 +101,15 @@ public class SupplierService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            System.err.println("Error deleting supplier:");
             e.printStackTrace();
+            if (transaction != null) {
+                try {
+                    transaction.rollback();
+                } catch (Exception rbe) {
+                    System.err.println("Rollback also failed: " + rbe.getMessage());
+                }
+            }
             return false;
         }
     }

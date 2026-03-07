@@ -21,10 +21,10 @@ public class SupplierServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String action = req.getParameter("action");
-        Users loggedInUser = (Users) req.getSession().getAttribute("user");
+        Users loggedInUser = (Users) req.getSession().getAttribute("currentUser");
 
         if (loggedInUser == null) {
-            resp.sendRedirect("/login.jsp");
+            resp.sendRedirect(req.getContextPath() + "/login.jsp");
             return;
         }
 
@@ -33,28 +33,28 @@ public class SupplierServlet extends HttpServlet {
         switch (action) {
 
             case "list":
-                req.setAttribute("suppliers", supplierService.getSuppliersByUser(loggedInUser));
-                req.getRequestDispatcher("/suppliers.jsp").forward(req, resp);
+                req.setAttribute("supplierList", supplierService.getSuppliersByUser(loggedInUser));
+                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
                 break;
 
             case "search":
                 String keyword = req.getParameter("keyword");
                 if (keyword == null) keyword = "";
-                req.setAttribute("suppliers", supplierService.searchSuppliers(loggedInUser, keyword));
+                req.setAttribute("supplierList", supplierService.searchSuppliers(loggedInUser, keyword));
                 req.setAttribute("keyword", keyword);
-                req.getRequestDispatcher("/suppliers.jsp").forward(req, resp);
+                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
                 break;
 
             case "edit":
                 Long editId = Long.parseLong(req.getParameter("id"));
                 Supplier supplierToEdit = supplierService.getSupplierById(editId);
                 req.setAttribute("supplierToEdit", supplierToEdit);
-                req.setAttribute("suppliers", supplierService.getSuppliersByUser(loggedInUser));
-                req.getRequestDispatcher("/suppliers.jsp").forward(req, resp);
+                req.setAttribute("supplierList", supplierService.getSuppliersByUser(loggedInUser));
+                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
                 break;
 
             default:
-                resp.sendRedirect("/suppliers.jsp");
+                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
         }
     }
 
@@ -65,58 +65,76 @@ public class SupplierServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String action = req.getParameter("action");
-        Users loggedInUser = (Users) req.getSession().getAttribute("user");
+        Users loggedInUser = (Users) req.getSession().getAttribute("currentUser");
 
         if (loggedInUser == null) {
-            resp.sendRedirect("/login.jsp");
+            resp.sendRedirect(req.getContextPath() + "/login.jsp");
             return;
         }
 
         if (action == null) {
-            resp.sendRedirect("/suppliers.jsp");
+            resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
             return;
         }
 
         switch (action) {
 
             case "addSupplier": {
-                String name    = req.getParameter("name");
-                String phone   = req.getParameter("phone");
-                String email   = req.getParameter("email");
-                String address = req.getParameter("address");
+                String name          = req.getParameter("name");
+                String phone         = req.getParameter("phone");
+                String email         = req.getParameter("email");
+                String address       = req.getParameter("address");
+                String contactPerson = req.getParameter("contactPerson");
+                String notes         = req.getParameter("notes");
+                double balanceOwed   = 0.0;
+                try {
+                    String balStr = req.getParameter("balanceOwed");
+                    if (balStr != null && !balStr.isBlank()) {
+                        balanceOwed = Double.parseDouble(balStr);
+                    }
+                } catch (Exception e) {}
 
                 System.out.println("[Supplier] Adding supplier: " + name);
 
                 // Check duplicate email
                 if (email != null && !email.isBlank() && supplierService.isEmailExists(email, null)) {
                     System.out.println("[Supplier] Email already exists: " + email);
-                    resp.sendRedirect("/suppliers.jsp?error=supplierEmailExists");
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=supplierEmailExists");
                     return;
                 }
 
-                Supplier supplier = new Supplier(name, phone, email, address, loggedInUser);
+                Supplier supplier = new Supplier(name, phone, email, address, contactPerson, balanceOwed, notes, loggedInUser);
 
                 boolean success = supplierService.addSupplier(supplier);
                 System.out.println("[Supplier] Add success: " + success);
 
                 // Redirect with success message
-                resp.sendRedirect("/suppliers.jsp?success=" + (success ? "supplierAdded" : "addFailed"));
+                resp.sendRedirect(req.getContextPath() + "/supplier?action=list&success=" + (success ? "supplierAdded" : "addFailed"));
                 break;
             }
 
             case "updateSupplier": {
-                Long id        = Long.parseLong(req.getParameter("id"));
-                String name    = req.getParameter("name");
-                String phone   = req.getParameter("phone");
-                String email   = req.getParameter("email");
-                String address = req.getParameter("address");
+                Long id              = Long.parseLong(req.getParameter("supplierId"));
+                String name          = req.getParameter("name");
+                String phone         = req.getParameter("phone");
+                String email         = req.getParameter("email");
+                String address       = req.getParameter("address");
+                String contactPerson = req.getParameter("contactPerson");
+                String notes         = req.getParameter("notes");
+                double balanceOwed   = 0.0;
+                try {
+                    String balStr = req.getParameter("balanceOwed");
+                    if (balStr != null && !balStr.isBlank()) {
+                        balanceOwed = Double.parseDouble(balStr);
+                    }
+                } catch (Exception e) {}
 
                 System.out.println("[Supplier] Updating supplier: " + id);
 
                 // Check duplicate email excluding this supplier
                 if (email != null && !email.isBlank() && supplierService.isEmailExists(email, id)) {
                     System.out.println("[Supplier] Email already exists: " + email);
-                    resp.sendRedirect("/suppliers.jsp?error=supplierEmailExists");
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=supplierEmailExists");
                     return;
                 }
 
@@ -126,17 +144,20 @@ public class SupplierServlet extends HttpServlet {
                 updated.setPhone(phone);
                 updated.setEmail(email);
                 updated.setAddress(address);
+                updated.setContactPerson(contactPerson);
+                updated.setBalanceOwed(balanceOwed);
+                updated.setNotes(notes);
 
                 boolean success = supplierService.updateSupplier(updated);
                 System.out.println("[Supplier] Update success: " + success);
 
                 // Redirect with success message
-                resp.sendRedirect("/suppliers.jsp?success=" + (success ? "supplierUpdated" : "updateFailed"));
+                resp.sendRedirect(req.getContextPath() + "/supplier?action=list&success=" + (success ? "supplierUpdated" : "updateFailed"));
                 break;
             }
 
             case "deleteSupplier": {
-                Long id = Long.parseLong(req.getParameter("id"));
+                Long id = Long.parseLong(req.getParameter("supplierId"));
 
                 System.out.println("[Supplier] Deleting supplier: " + id);
 
@@ -144,12 +165,12 @@ public class SupplierServlet extends HttpServlet {
                 System.out.println("[Supplier] Delete success: " + success);
 
                 // Redirect with success message
-                resp.sendRedirect("/suppliers.jsp?success=" + (success ? "supplierDeleted" : "deleteFailed"));
+                resp.sendRedirect(req.getContextPath() + "/supplier?action=list&success=" + (success ? "supplierDeleted" : "deleteFailed"));
                 break;
             }
 
             default:
-                resp.sendRedirect("/suppliers.jsp");
+                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
         }
     }
 }

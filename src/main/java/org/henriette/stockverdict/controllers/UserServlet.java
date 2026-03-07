@@ -22,15 +22,26 @@ public class UserServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         Properties config = new Properties();
-        try (InputStream input = getClass().getClassLoader()
-                .getResourceAsStream("config.properties")) {
+        String localConfig = "config.local.properties";
+        String defaultConfig = "config.properties";
+
+        try {
+            // Try local first
+            InputStream input = getClass().getClassLoader().getResourceAsStream(localConfig);
             if (input == null) {
-                throw new ServletException("config.properties not found in resources!");
+                // Fallback to default
+                input = getClass().getClassLoader().getResourceAsStream(defaultConfig);
             }
+
+            if (input == null) {
+                throw new ServletException("Configuration file not found (tried " + localConfig + " and " + defaultConfig + ")");
+            }
+
             config.load(input);
             recaptchaSecretKey = config.getProperty("RECAPTCHA_SECRET_KEY");
+            input.close();
         } catch (IOException e) {
-            throw new ServletException("Failed to load config.properties", e);
+            throw new ServletException("Failed to load configuration", e);
         }
     }
 
