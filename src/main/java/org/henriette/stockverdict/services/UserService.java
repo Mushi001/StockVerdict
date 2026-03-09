@@ -254,12 +254,29 @@ public class UserService {
             message.setFrom(new InternetAddress(senderEmail));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
             message.setSubject("Your Login OTP - StockVerdict");
-            message.setText(
-                    "Your verification code is: " + otpCode +
-                            "\n\nThis code will expire in 5 minutes." +
-                            "\n\nIf you did not request this, ignore this email." +
-                            "\n\n- StockVerdict Team"
-            );
+            
+            String htmlContent = "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; background-color: #f4f7f6; border-radius: 8px;\">"
+                    + "<div style=\"text-align: center; margin-bottom: 30px;\">"
+                    + "<h1 style=\"color: #2c3e50; margin: 0; font-size: 28px; letter-spacing: 1px;\">StockVerdict</h1>"
+                    + "<div style=\"height: 3px; background-color: #3498db; width: 50px; margin: 10px auto;\"></div>"
+                    + "</div>"
+                    + "<div style=\"background-color: #ffffff; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);\">"
+                    + "<h2 style=\"color: #333333; margin-top: 0; font-size: 22px;\">Authentication Required</h2>"
+                    + "<p style=\"color: #666666; font-size: 16px; line-height: 1.6; margin-bottom: 25px;\">You are attempting to sign in to your StockVerdict account. Please use the verification code below to complete the secure login process:</p>"
+                    + "<div style=\"text-align: center; margin: 35px 0;\">"
+                    + "<span style=\"display: inline-block; font-size: 36px; font-weight: 700; color: #2980b9; background-color: #ebf5fb; padding: 20px 40px; border-radius: 8px; letter-spacing: 6px; border: 1px solid #d6eaf8;\">" + otpCode + "</span>"
+                    + "</div>"
+                    + "<p style=\"color: #666666; font-size: 15px; line-height: 1.6;\">This code is valid for <strong>5 minutes</strong>. For your security, please do not share this code with anyone.</p>"
+                    + "<div style=\"margin-top: 40px; padding-top: 20px; border-top: 1px solid #eeeeee;\">"
+                    + "<p style=\"color: #999999; font-size: 13px; line-height: 1.5; margin: 0;\">If you did not initiate this request, please ignore it or contact our support team immediately.</p>"
+                    + "</div>"
+                    + "</div>"
+                    + "<div style=\"text-align: center; margin-top: 25px; color: #aaaaaa; font-size: 12px;\">"
+                    + "&copy; " + java.time.Year.now().getValue() + " StockVerdict. All rights reserved."
+                    + "</div>"
+                    + "</div>";
+
+            message.setContent(htmlContent, "text/html; charset=utf-8");
 
             Transport.send(message);
             System.out.println("OTP email sent successfully to " + recipientEmail);
