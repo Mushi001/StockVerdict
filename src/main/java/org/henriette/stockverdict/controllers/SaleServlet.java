@@ -16,16 +16,32 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Servlet handling HTTP requests for Sales transactions.
+ * Manages processing new sales, viewing sale receipts, listing all sales,
+ * and deleting past sales. Actions are restricted to authenticated users.
+ */
 @WebServlet("/sales")
-
 public class SaleServlet extends HttpServlet {
 
     private final SaleService     saleService     = new SaleService();
     private final ProductService  productService  = new ProductService();
     private final CustomerService customerService = new CustomerService();
 
-    // ================= DO GET =================
-
+    /**
+     * Handles HTTP GET requests to display sales information.
+     * Actions supported:
+     * <ul>
+     *     <li><code>list</code>: Displays all sales history for the current user.</li>
+     *     <li><code>view</code>: Shows detailed items for a specific sale transaction.</li>
+     *     <li><code>byCustomer</code>: Filters sales history for a specific customer.</li>
+     * </ul>
+     *
+     * @param req  the {@link HttpServletRequest} containing the query parameters
+     * @param resp the {@link HttpServletResponse} used to forward to the dashboard
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an I/O error occurs
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -74,8 +90,20 @@ public class SaleServlet extends HttpServlet {
         }
     }
 
-    // ================= DO POST =================
-
+    /**
+     * Handles HTTP POST requests for creating and deleting sales.
+     * Actions supported:
+     * <ul>
+     *     <li><code>createSale</code>: Processes a shopping cart of items, creating a new Sale,
+     *         deducting stock, and linking an optional customer.</li>
+     *     <li><code>deleteSale</code>: Removes a sale record and reverses the associated stock deduction.</li>
+     * </ul>
+     *
+     * @param req  the {@link HttpServletRequest} containing formData (e.g., arrays of productIds/quantities)
+     * @param resp the {@link HttpServletResponse} used to redirect upon completion
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an I/O error occurs
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {

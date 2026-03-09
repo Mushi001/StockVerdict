@@ -12,13 +12,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+/**
+ * Servlet handling HTTP requests for User authentication and management.
+ * Manages registration, login, OTP verification, profile updates, logout, and deletion.
+ * Validates Google reCAPTCHA during registration.
+ */
 @WebServlet(name = "UserServlet", value = "/user")
 public class UserServlet extends HttpServlet {
 
     private UserService userService = new UserService();
     private String recaptchaSecretKey;
 
-    // ------------------- Load config on startup -------------------
+    /**
+     * Initializes the servlet.
+     * Loads the configuration properties to retrieve the Google reCAPTCHA secret key.
+     * Tries <code>config.local.properties</code> first, then falls back to <code>config.properties</code>.
+     *
+     * @throws ServletException if configuration files cannot be loaded
+     */
     @Override
     public void init() throws ServletException {
         Properties config = new Properties();
@@ -45,7 +56,15 @@ public class UserServlet extends HttpServlet {
         }
     }
 
-    // ------------------- POST: register, login, update -------------------
+    /**
+     * Handles HTTP POST requests, primarily for form submissions involving sensitive data.
+     * Actions supported: <code>register</code>, <code>login</code>, <code>verifyOtp</code>, <code>update</code>.
+     *
+     * @param request  the {@link HttpServletRequest} containing the form data and action parameter
+     * @param response the {@link HttpServletResponse} used for forwarding or redirection
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an I/O error occurs
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
@@ -61,7 +80,15 @@ public class UserServlet extends HttpServlet {
         }
     }
 
-    // ------------------- GET: logout, delete -------------------
+    /**
+     * Handles HTTP GET requests.
+     * Actions supported: <code>logout</code>, <code>delete</code>.
+     *
+     * @param request  the {@link HttpServletRequest} containing the action parameter
+     * @param response the {@link HttpServletResponse} used for redirection
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an I/O error occurs
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
@@ -73,7 +100,16 @@ public class UserServlet extends HttpServlet {
         }
     }
 
-    // ------------------- Registration -------------------
+    /**
+     * Processes a user registration request.
+     * Validates that the email doesn't already exist and that the reCAPTCHA challenge was successful.
+     * Upon success, redirects the user to the login page.
+     *
+     * @param request  the HTTP request containing registration form data
+     * @param response the HTTP response
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an I/O error occurs
+     */
     private void handleRegister(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String name     = request.getParameter("name");
         String email    = request.getParameter("email");
@@ -102,6 +138,12 @@ public class UserServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Verifies a Google reCAPTCHA v2 token with the Google API.
+     *
+     * @param gRecaptchaResponse the token submitted by the frontend client
+     * @return true if Google confirms the verification was successful, false otherwise
+     */
     private boolean verifyRecaptcha(String gRecaptchaResponse) {
         try {
             String url    = "https://www.google.com/recaptcha/api/siteverify";
@@ -142,7 +184,17 @@ public class UserServlet extends HttpServlet {
         }
     }
 
-    // ------------------- Login -------------------
+    /**
+     * Processes a user login request.
+     * Validates credentials against the database. If successful, generates a 6-digit OTP,
+     * stores it in the database with an expiration time, sends it via email, and redirects
+     * the user to the OTP verification page.
+     *
+     * @param request  the HTTP request containing login credentials
+     * @param response the HTTP response
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an I/O error occurs
+     */
     private void handleLogin(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -176,7 +228,17 @@ public class UserServlet extends HttpServlet {
         }
     }
 
-    // ------------------- Verify OTP -------------------
+    /**
+     * Verifies the OTP submitted by the user during the two-factor authentication process.
+     * Confirms the OTP matches the database record and has not expired or been previously used.
+     * Upon success, creates the authenticated user session (<code>currentUser</code>) and redirects
+     * to the appropriate dashboard based on their role.
+     *
+     * @param request  the HTTP request containing the OTP code
+     * @param response the HTTP response
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an I/O error occurs
+     */
     private void handleVerifyOtp(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -246,7 +308,15 @@ public class UserServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + dashboardPage);
     }
 
-    // ------------------- Update -------------------
+    /**
+     * Processes a profile update request from the authenticated user.
+     * Modifies the user's name, password, or role.
+     *
+     * @param request  the HTTP request containing the updated profile data
+     * @param response the HTTP response
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an I/O error occurs
+     */
     private void handleUpdate(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String name     = request.getParameter("name");
         String email    = request.getParameter("email");
@@ -264,7 +334,14 @@ public class UserServlet extends HttpServlet {
         request.getRequestDispatcher("/profile.jsp").forward(request, response);
     }
 
-    // ------------------- Logout -------------------
+    /**
+     * Logs out the current user by invalidating their HTTP session.
+     * Redirects them back to the login page.
+     *
+     * @param request  the HTTP request
+     * @param response the HTTP response
+     * @throws IOException if an I/O error occurs during redirection
+     */
     private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
         if (session != null) {
@@ -273,7 +350,14 @@ public class UserServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/login.jsp?success=loggedout");
     }
 
-    // ------------------- Delete -------------------
+    /**
+     * Deletes a user account from the system.
+     * This action is typically restricted to Administrators from the admin dashboard.
+     *
+     * @param request  the HTTP request containing the ID of the user to delete
+     * @param response the HTTP response
+     * @throws IOException if an I/O error occurs during redirection
+     */
     private void handleDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String idParam = request.getParameter("id");
         if (idParam != null && !idParam.isEmpty()) {

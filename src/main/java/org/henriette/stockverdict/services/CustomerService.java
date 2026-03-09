@@ -12,10 +12,19 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Service class for managing {@link Customer} entities.
+ * Provides CRUD operations and custom queries for customer management.
+ */
 public class CustomerService {
 
-    // ================= ADD CUSTOMER =================
-
+    /**
+     * Adds a new customer to the database.
+     * Sets the creation and update timestamps before persisting.
+     *
+     * @param customer the customer entity to add
+     * @return true if the customer was successfully added, false otherwise
+     */
     public boolean addCustomer(Customer customer) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -37,8 +46,12 @@ public class CustomerService {
         }
     }
 
-    // ================= UPDATE CUSTOMER =================
-
+    /**
+     * Updates an existing customer's details.
+     *
+     * @param updatedCustomer the customer entity containing updated information
+     * @return true if the customer was successfully updated, false if not found or on error
+     */
     public boolean updateCustomer(Customer updatedCustomer) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -66,8 +79,12 @@ public class CustomerService {
         }
     }
 
-    // ================= DELETE CUSTOMER =================
-
+    /**
+     * Deletes a customer by their unique identifier.
+     *
+     * @param customerId the ID of the customer to delete
+     * @return true if the customer was successfully deleted, false if not found or on error
+     */
     public boolean deleteCustomer(Long customerId) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -89,8 +106,12 @@ public class CustomerService {
         }
     }
 
-    // ================= GET CUSTOMER BY ID =================
-
+    /**
+     * Retrieves a customer by their unique identifier.
+     *
+     * @param customerId the ID of the customer
+     * @return the {@link Customer} entity if found, null otherwise
+     */
     public Customer getCustomerById(Long customerId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -102,8 +123,12 @@ public class CustomerService {
         }
     }
 
-    // ================= GET ALL CUSTOMERS BY USER =================
-
+    /**
+     * Retrieves all customers managed by a specific user.
+     *
+     * @param user the managing {@link Users}
+     * @return a list of {@link Customer} entities ordered by name
+     */
     public List<Customer> getCustomersByUser(Users user) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -120,8 +145,11 @@ public class CustomerService {
         }
     }
 
-    // ================= GET ALL CUSTOMERS =================
-
+    /**
+     * Retrieves all customers in the system.
+     *
+     * @return a list of all {@link Customer} entities ordered by name
+     */
     public List<Customer> getAllCustomers() {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -137,8 +165,14 @@ public class CustomerService {
         }
     }
 
-    // ================= SEARCH CUSTOMERS =================
-
+    /**
+     * Searches for customers managed by a specific user using a keyword.
+     * The search matches against the customer's name, email, or phone.
+     *
+     * @param user    the managing {@link Users}
+     * @param keyword the search term
+     * @return a list of matching {@link Customer} entities
+     */
     public List<Customer> searchCustomers(Users user, String keyword) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -158,8 +192,13 @@ public class CustomerService {
         }
     }
 
-    // ================= IS EMAIL EXISTS =================
-
+    /**
+     * Checks if an email address is already in use by another customer.
+     *
+     * @param email             the email address to check
+     * @param excludeCustomerId an optional customer ID to exclude from the check (useful during updates)
+     * @return true if the email is taken, false otherwise
+     */
     public boolean isEmailExists(String email, Long excludeCustomerId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -180,8 +219,12 @@ public class CustomerService {
         }
     }
 
-    // ================= COUNT CUSTOMERS BY USER =================
-
+    /**
+     * Counts the total number of customers managed by a specific user.
+     *
+     * @param user the managing {@link Users}
+     * @return the count of customers
+     */
     public Long countCustomersByUser(Users user) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 

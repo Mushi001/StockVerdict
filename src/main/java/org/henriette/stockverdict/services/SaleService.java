@@ -15,11 +15,21 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Service class for managing {@link Sales} entities and their corresponding items.
+ * Handles sales transactions, stock deduction, and revenue reporting.
+ */
 public class SaleService {
 
-    // ================= CREATE SALE =================
-    // Persists the Sale + all SaleItems + decrements stock for each product
-
+    /**
+     * Creates a new sale transaction.
+     * Persists the Sale, all its SaleItems, decreases stock quantities for each product,
+     * calculates the subtotal per item, and sets the total sale amount.
+     *
+     * @param sale  the sale details to persist
+     * @param items the list of items included in the sale
+     * @return true if the sale was successfully created, false if items were out of stock or on error
+     */
     public boolean createSale(Sales sale, List<SaleItem> items) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -69,9 +79,13 @@ public class SaleService {
         }
     }
 
-    // ================= DELETE SALE =================
-    // Deletes the sale + all its items + reverses stock decrements
-
+    /**
+     * Deletes a sale transaction.
+     * Deletes the sale and all its items, and reverses the stock decrements.
+     *
+     * @param saleId the ID of the sale to delete
+     * @return true if successfully deleted, false on error or if not found
+     */
     public boolean deleteSale(Long saleId) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -104,8 +118,12 @@ public class SaleService {
         }
     }
 
-    // ================= GET SALE BY ID =================
-
+    /**
+     * Retrieves a sale transaction by its ID.
+     *
+     * @param saleId the ID of the sale
+     * @return the {@link Sales} entity if found, null otherwise
+     */
     public Sales getSaleById(Long saleId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -117,8 +135,12 @@ public class SaleService {
         }
     }
 
-    // ================= GET ALL SALES BY USER =================
-
+    /**
+     * Retrieves all sales processed by a specific user.
+     *
+     * @param user the user (trader) who processed the sales
+     * @return a list of {@link Sales} entities ordered chronologically by sale date descending
+     */
     public List<Sales> getSalesByUser(Users user) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -135,8 +157,12 @@ public class SaleService {
         }
     }
 
-    // ================= GET SALE ITEMS BY SALE =================
-
+    /**
+     * Retrieves all items belonging to a specific sale transaction.
+     *
+     * @param sale the parent {@link Sales} transaction
+     * @return a list of {@link SaleItem} components
+     */
     public List<SaleItem> getSaleItemsBySale(Sales sale) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -153,8 +179,12 @@ public class SaleService {
         }
     }
 
-    // ================= GET SALES BY CUSTOMER =================
-
+    /**
+     * Retrieves all sales associated with a specific customer.
+     *
+     * @param customer the customer whose purchases are being queried
+     * @return a list of {@link Sales} entities ordered chronologically by sale date descending
+     */
     public List<Sales> getSalesByCustomer(Customer customer) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -171,8 +201,14 @@ public class SaleService {
         }
     }
 
-    // ================= GET SALES BY DATE RANGE =================
-
+    /**
+     * Retrieves all sales processed by a user within a specified date range.
+     *
+     * @param user the user who processed the sales
+     * @param from the start date (inclusive)
+     * @param to   the end date (inclusive)
+     * @return a list of matching {@link Sales} entities ordered chronologically by sale date descending
+     */
     public List<Sales> getSalesByDateRange(Users user, LocalDateTime from, LocalDateTime to) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -193,8 +229,12 @@ public class SaleService {
         }
     }
 
-    // ================= TOTAL REVENUE BY USER =================
-
+    /**
+     * Calculates the total revenue generated from all sales processed by a specific user.
+     *
+     * @param user the user
+     * @return the total revenue
+     */
     public Double getTotalRevenueByUser(Users user) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -212,8 +252,14 @@ public class SaleService {
         }
     }
 
-    // ================= TOTAL REVENUE BY DATE RANGE =================
-
+    /**
+     * Calculates the total revenue generated by a user within a specified date range.
+     *
+     * @param user the user
+     * @param from the start date (inclusive)
+     * @param to   the end date (inclusive)
+     * @return the total revenue in the specified period
+     */
     public Double getTotalRevenueByDateRange(Users user, LocalDateTime from, LocalDateTime to) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -234,8 +280,12 @@ public class SaleService {
         }
     }
 
-    // ================= COUNT SALES BY USER =================
-
+    /**
+     * Counts the total number of distinct sale transactions processed by a user.
+     *
+     * @param user the user
+     * @return the total count of their sales
+     */
     public Long countSalesByUser(Users user) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -252,8 +302,13 @@ public class SaleService {
         }
     }
 
-    // ================= TOP SELLING PRODUCTS =================
-
+    /**
+     * Retrieves the top-selling products by volume for a specific user.
+     *
+     * @param user  the user querying the top products
+     * @param limit the maximum number of top products to retrieve
+     * @return a list of Object arrays containing the product name and the total quantity sold
+     */
     public List<Object[]> getTopSellingProducts(Users user, int limit) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 

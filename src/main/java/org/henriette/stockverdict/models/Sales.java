@@ -4,34 +4,74 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Represents a completed sales transaction in the system.
+ * It contains information about the sale date, total amount, the trader who made the sale, 
+ * the customer (optionally), and the individual items sold.
+ */
 @Entity
 @Table(name = "sales")
 public class Sales {
 
+    /**
+     * The unique identifier for the sales transaction.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * The date and time when the sale occurred.
+     */
     private LocalDateTime saleDate;
+
+    /**
+     * The total monetary amount of the sale.
+     */
     private Double totalAmount;
+
+    /**
+     * The method of payment used (e.g., Cash, Card).
+     */
     private String paymentMethod;
 
+    /**
+     * The trader who handled the sale transaction.
+     */
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users user;  // The trader who handled the sale
 
+    /**
+     * The optional customer who made the purchase.
+     */
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;  // Optional: the customer who made the purchase
 
+    /**
+     * The list of items included in this sales transaction.
+     */
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL)
     private List<SaleItem> saleItems;  // Products in this sale
 
     // Constructors
+    /**
+     * Default constructor.
+     * Automatically sets the sale date to the current date and time.
+     */
     public Sales() {
         this.saleDate = LocalDateTime.now();
     }
 
+    /**
+     * Constructs a new Sales transaction with the specified details.
+     *
+     * @param totalAmount   the total amount of the sale
+     * @param paymentMethod the payment method used
+     * @param user          the user handling the sale
+     * @param customer      the customer making the purchase (can be null)
+     */
     public Sales(Double totalAmount, String paymentMethod, Users user, Customer customer) {
         this.saleDate = LocalDateTime.now();
         this.totalAmount = totalAmount;

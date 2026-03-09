@@ -3,38 +3,94 @@ package org.henriette.stockverdict.models;
 import jakarta.persistence.*;
 import java.util.List;
 
+/**
+ * Represents a supplier or vendor who provides products to the business.
+ * Contains supplier contact details, balance owed, and associations to products and stock entries.
+ */
 @Entity
 @Table(name = "suppliers")
 public class Supplier {
 
+    /**
+     * The unique identifier for the supplier.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * The name of the supplier or the supplying company.
+     */
     @Column(nullable = false)
     private String name;
 
+    /**
+     * The primary phone number of the supplier.
+     */
     private String phone;
+
+    /**
+     * The primary email address of the supplier.
+     */
     private String email;
+
+    /**
+     * The physical address of the supplier.
+     */
     private String address;
 
+    /**
+     * The name of the primary contact person at the supplier's company.
+     */
     private String contactPerson;
+
+    /**
+     * The outstanding balance owed to this supplier.
+     */
     private double balanceOwed;
+
+    /**
+     * Additional notes or descriptions about the supplier.
+     */
     private String notes;
 
+    /**
+     * The user who manages the relationship with this supplier.
+     */
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users user;
 
+    /**
+     * A list of all stock entries fulfilled by this supplier.
+     */
     @OneToMany(mappedBy = "supplier")
     private List<StockEntry> stockEntries;
 
+    /**
+     * A list of products typically supplied by this vendor.
+     */
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Products> products;
 
     // Constructors
+    /**
+     * Default constructor.
+     */
     public Supplier() {}
 
+    /**
+     * Constructs a new Supplier with the specified details.
+     *
+     * @param name          the name of the supplier
+     * @param phone         the contact phone number
+     * @param email         the contact email address
+     * @param address       the physical address
+     * @param contactPerson the name of the main point of contact
+     * @param balanceOwed   the starting balance owed
+     * @param notes         additional notes about the relationship
+     * @param user          the user creating or managing this supplier record
+     */
     public Supplier(String name, String phone, String email, String address, String contactPerson, double balanceOwed, String notes, Users user) {
         this.name = name;
         this.phone = phone;

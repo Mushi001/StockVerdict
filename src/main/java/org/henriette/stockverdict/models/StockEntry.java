@@ -3,35 +3,76 @@ package org.henriette.stockverdict.models;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Represents a record of stock added to the inventory.
+ * Tracks the quantity added, the purchase price, the product, the supplier, 
+ * and the user who generated the entry.
+ */
 @Entity
 @Table(name = "stock_entries")
 public class StockEntry {
 
+    /**
+     * The unique identifier for the stock entry.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * The number of items added to the stock.
+     */
     private Integer quantityAdded;
+
+    /**
+     * The price at which the batch of items was purchased.
+     */
     private Double purchasePrice;
+
+    /**
+     * The date and time when the stock was added.
+     */
     private LocalDateTime dateAdded;
 
+    /**
+     * The product for which stock is being added.
+     */
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Products product;
 
+    /**
+     * The supplier from whom the stock was purchased.
+     */
     @ManyToOne
     @JoinColumn(name = "supplier_id")
     private Supplier supplier;
 
+    /**
+     * The user who recorded this stock entry.
+     */
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users user;
 
     // Constructors
+    /**
+     * Default constructor.
+     * Automatically sets the date added to the current date and time.
+     */
     public StockEntry() {
         this.dateAdded = LocalDateTime.now();
     }
 
+    /**
+     * Constructs a new StockEntry with the specified details.
+     *
+     * @param quantityAdded the amount of stock initially added
+     * @param purchasePrice the purchase price of the added stock
+     * @param product       the product being restocked
+     * @param supplier      the supplier providing the stock
+     * @param user          the user handling the entry creation
+     */
     public StockEntry(Integer quantityAdded, Double purchasePrice, Products product, Supplier supplier, Users user) {
         this.quantityAdded = quantityAdded;
         this.purchasePrice = purchasePrice;

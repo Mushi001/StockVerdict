@@ -20,10 +20,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Properties;
 
+/**
+ * Service class for managing {@link Users} and their authentication via {@link Otp}.
+ * Handles user registration, login, email OTPs, and password hashing.
+ */
 public class UserService {
 
-    // ================= PASSWORD =================
-
+    /**
+     * Hashes a plain text password using BCrypt.
+     *
+     * @param plainPassword the raw password to secure
+     * @return the hashed BCrypt string
+     */
     private String hashPassword(String plainPassword) {
         return BCrypt.hashpw(plainPassword, BCrypt.gensalt());
     }
@@ -32,8 +40,13 @@ public class UserService {
         return BCrypt.checkpw(plainPassword, hashedPassword);
     }
 
-    // ================= REGISTER =================
-
+    /**
+     * Registers a new user in the system.
+     * Hashes their password and sets their creation timestamps.
+     *
+     * @param user the user details to persist
+     * @return true if successfully registered, false on error
+     */
     public boolean registerUser(Users user) {
         Transaction transaction = null;
 
@@ -57,8 +70,13 @@ public class UserService {
         }
     }
 
-    // ================= LOGIN =================
-
+    /**
+     * Authenticates a user primarily using their email and password.
+     *
+     * @param email    the plain text email address
+     * @param password the plain text password to check against their hashed storage
+     * @return the {@link Users} entity if credentials are valid, null otherwise
+     */
     public Users loginUser(String email, String password) {
 
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -81,8 +99,14 @@ public class UserService {
         return null;
     }
 
-    // ================= SAVE OTP =================
-
+    /**
+     * Saves a new OTP for the given user.
+     * Automatically invalidates any previously unused OTPs before inserting the new one.
+     *
+     * @param user       the requesting user
+     * @param otpCode    the raw OTP string
+     * @param expiryTime the absolute expiration time
+     */
     public void saveOtp(Users user, String otpCode, LocalDateTime expiryTime) {
 
         Transaction transaction = null;
@@ -108,8 +132,12 @@ public class UserService {
         }
     }
 
-    // ================= GET LATEST OTP =================
-
+    /**
+     * Retrieves the most recently created OTP for a user.
+     *
+     * @param user the user whose OTP is required
+     * @return the latest {@link Otp} instance, or null if none exist
+     */
     public Otp getLatestOtp(Users user) {
 
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -134,8 +162,11 @@ public class UserService {
         return null;
     }
 
-    // ================= MARK OTP USED =================
-
+    /**
+     * Marks a specific OTP as used to prevent subsequent re-use.
+     *
+     * @param otp the OTP record to update
+     */
     public void markOtpAsUsed(Otp otp) {
 
         Transaction transaction = null;
@@ -155,8 +186,14 @@ public class UserService {
         }
     }
 
-    // ================= SEND OTP EMAIL =================
-
+    /**
+     * Sends the generated OTP to the user's email address using SMTP settings
+     * loaded dynamically from properties configuration files.
+     *
+     * @param recipientEmail the target email to send the code to
+     * @param otpCode        the actual code to dispatch
+     * @return true if the email was successfully sent, false otherwise
+     */
     public boolean sendOtpEmail(String recipientEmail, String otpCode) {
 
         // Load from config.local.properties (preferred) or config.properties
@@ -234,6 +271,12 @@ public class UserService {
             return false;
         }
     }
+    /**
+     * Checks if the supplied email address is already taken by an existing user.
+     *
+     * @param email the email to check
+     * @return true if a user possesses the email, false otherwise
+     */
     public boolean isEmailExists(String email) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -249,7 +292,12 @@ public class UserService {
         }
     }
 
-    // ================= FIND USER BY ID =================
+    /**
+     * Retrieves a user by their unique identifier.
+     *
+     * @param id the user ID
+     * @return the {@link Users} entity if found, null otherwise
+     */
     public Users findById(Long id) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             return session.get(Users.class, id);
@@ -259,7 +307,13 @@ public class UserService {
         }
     }
 
-    // ================= UPDATE USER =================
+    /**
+     * Updates an existing user's information.
+     * Locates the user using their email address before editing variables.
+     *
+     * @param updatedUser the modified user instance data
+     * @return true if updated, false if the user was not found
+     */
     public boolean updateUser(Users updatedUser) {
 
         Transaction transaction = null;
@@ -294,7 +348,12 @@ public class UserService {
         }
     }
 
-    // ================= DELETE USER =================
+    /**
+     * Deletes a user by their unique ID.
+     *
+     * @param userId the ID to remove from tracking
+     * @return true if successfully erased, false if missing or failed
+     */
     public boolean deleteUser(Long userId) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {

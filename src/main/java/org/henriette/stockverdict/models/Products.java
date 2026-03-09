@@ -4,52 +4,118 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Represents a product in the StockVerdict inventory.
+ * Stores details such as pricing, stock levels, and associated suppliers and sales.
+ */
 @Entity
 @Table(name = "products")
 public class Products {
 
+    /**
+     * The unique identifier for the product.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * The name of the product.
+     */
     @Column(nullable = false)
     private String name;
 
+    /**
+     * A detailed description of the product.
+     */
     private String description;
+
+    /**
+     * The barcode associated with the product for scanning.
+     */
     private String barcode;
 
+    /**
+     * The price at which the product is purchased from the supplier.
+     */
     @Column(nullable = false)
     private Double purchasePrice;
 
+    /**
+     * The price at which the product is sold to the customer.
+     */
     @Column(nullable = false)
     private Double sellingPrice;
 
+    /**
+     * The current quantity of the product available in stock.
+     */
     private Integer quantityInStock;
+
+    /**
+     * The minimum stock level at which a reorder should be triggered.
+     */
     private Integer reorderLevel;
 
+    /**
+     * The timestamp when this product record was created.
+     */
     private LocalDateTime createdAt;
+
+    /**
+     * The timestamp when this product record was last updated.
+     */
     private LocalDateTime updatedAt;
 
+    /**
+     * The user who manages or created this product record.
+     */
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users user;
 
+    /**
+     * The supplier providing this product.
+     */
     @ManyToOne
     @JoinColumn(name = "supplier_id")
     private Supplier supplier;
 
+    /**
+     * The list of sale items associated with this product.
+     */
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SaleItem> saleItems;
 
+    /**
+     * The history of stock entries for this product.
+     */
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StockEntry> stockEntries;
 
     // Constructors
+    /**
+     * Default constructor.
+     * Initializes the creation and update timestamps to the current date and time.
+     */
     public Products() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * Constructs a new Product with the specified details.
+     *
+     * @param name            the name of the product
+     * @param description     the description of the product
+     * @param barcode         the product's barcode
+     * @param purchasePrice   the purchase price from the supplier
+     * @param sellingPrice    the selling price to customers
+     * @param quantityInStock the initial stock quantity
+     * @param reorderLevel    the threshold for reordering
+     * @param user            the associated user managing the product
+     * @param supplier        the supplier of the product
+     */
     public Products(String name, String description, String barcode, Double purchasePrice, Double sellingPrice, Integer quantityInStock, Integer reorderLevel, Users user, Supplier supplier) {
         this.name = name;
         this.description = description;

@@ -9,13 +9,30 @@ import org.henriette.stockverdict.services.CustomerService;
 
 import java.io.IOException;
 
+/**
+ * Servlet handling HTTP requests for Customer management.
+ * Responsible for listing, searching, adding, updating, and deleting {@link Customer} entities.
+ * Requires an authenticated user session to access its endpoints.
+ */
 @WebServlet("/customer")
 public class CustomerServlet extends HttpServlet {
 
     private final CustomerService customerService = new CustomerService();
 
-    // ================= DO GET =================
-
+    /**
+     * Handles HTTP GET requests for customer-related views.
+     * Actions supported:
+     * <ul>
+     *     <li><code>list</code>: Displays all customers managed by the current user.</li>
+     *     <li><code>search</code>: Filters customers based on a keyword.</li>
+     *     <li><code>edit</code>: Prepares the dashboard to edit a specific customer.</li>
+     * </ul>
+     *
+     * @param req  an {@link HttpServletRequest} object that contains the request the client has made of the servlet
+     * @param resp an {@link HttpServletResponse} object that contains the response the servlet sends to the client
+     * @throws ServletException if the request for the GET could not be handled
+     * @throws IOException      if an input or output error is detected when the servlet handles the GET request
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -57,8 +74,20 @@ public class CustomerServlet extends HttpServlet {
         }
     }
 
-    // ================= DO POST =================
-
+    /**
+     * Handles HTTP POST requests for customer-related operations.
+     * Actions supported:
+     * <ul>
+     *     <li><code>addCustomer</code>: Creates a new customer record.</li>
+     *     <li><code>updateCustomer</code>: Modifies an existing customer record.</li>
+     *     <li><code>deleteCustomer</code>: Removes a customer record.</li>
+     * </ul>
+     *
+     * @param req  an {@link HttpServletRequest} object that contains the request the client has made of the servlet
+     * @param resp an {@link HttpServletResponse} object that contains the response the servlet sends to the client
+     * @throws ServletException if the request for the POST could not be handled
+     * @throws IOException      if an input or output error is detected when the servlet handles the request
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {

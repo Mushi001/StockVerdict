@@ -11,14 +11,32 @@ import org.henriette.stockverdict.services.SupplierService;
 
 import java.io.IOException;
 
+/**
+ * Servlet handling HTTP requests for Product management.
+ * Provides endpoints for listing, searching, discovering low stock, adding, editing, and deleting {@link Products}.
+ * Ensures all actions are performed by an authenticated user.
+ */
 @WebServlet("/products")
 public class ProductServlet extends HttpServlet {
 
     private final ProductService productService = new ProductService();
     private final SupplierService supplierService = new SupplierService();
 
-    // ================= DO GET =================
-
+    /**
+     * Handles HTTP GET requests for product-related views.
+     * Actions supported:
+     * <ul>
+     *     <li><code>list</code>: Displays all products for the authenticated user.</li>
+     *     <li><code>lowStock</code>: Filters products to show only those at or below their reorder level.</li>
+     *     <li><code>search</code>: Filters products based on a keyword match.</li>
+     *     <li><code>edit</code>: Prepares the dashboard to edit a specific product.</li>
+     * </ul>
+     *
+     * @param req  the {@link HttpServletRequest} object containing the client's request
+     * @param resp the {@link HttpServletResponse} object containing the servlet's response
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an input/output error occurs
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -70,8 +88,20 @@ public class ProductServlet extends HttpServlet {
         }
     }
 
-    // ================= DO POST =================
-
+    /**
+     * Handles HTTP POST requests for product modification operations.
+     * Actions supported:
+     * <ul>
+     *     <li><code>addProduct</code>: Creates a new product, validating barcode uniqueness and pricing logic.</li>
+     *     <li><code>updateProduct</code>: Updates an existing product's details.</li>
+     *     <li><code>deleteProduct</code>: Permanently removes a product from the database.</li>
+     * </ul>
+     *
+     * @param req  the {@link HttpServletRequest} object containing the client's form data
+     * @param resp the {@link HttpServletResponse} object to send redirects back to the client
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an input/output error occurs
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {

@@ -7,34 +7,72 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 
+/**
+ * Represents a user in the StockVerdict system (e.g., Trader, Admin).
+ * Contains authentication details, roles, and auditing timestamps.
+ */
 @Entity
 @Table(name = "users")
 public class Users {
+        /**
+         * The unique identifier for the user.
+         */
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
 
+        /**
+         * The full name of the user.
+         */
         @Column(nullable = false)
         private String name;
 
+        /**
+         * The user's email address, which is unique and often used for logging in.
+         */
         @Column(nullable = false, unique = true)
         private String email;
 
+        /**
+         * The hashed password used for authentication.
+         */
         @Column(nullable = false)
         private String password;
 
+        /**
+         * The access level or role of the user (e.g., "ADMIN", "TRADER").
+         */
         @Column(nullable = false)
         private String role;
 
+        /**
+         * The timestamp indicating when the user account was created.
+         */
         private LocalDateTime createdAt;
+
+        /**
+         * The timestamp indicating the last time the user account was updated.
+         */
         private LocalDateTime updatedAt;
 
         // Constructors
+        /**
+         * Default constructor.
+         * Initializes the creation and update timestamps to the current date and time.
+         */
         public Users() {
             this.createdAt = LocalDateTime.now();
             this.updatedAt = LocalDateTime.now();
         }
 
+        /**
+         * Constructs a new User with the specified details.
+         *
+         * @param name     the full name of the user
+         * @param email    the user's email address
+         * @param password the hashed user's password
+         * @param role     the designated role for the user
+         */
         public Users(String name, String email, String password, String role) {
             this.name = name;
             this.email = email;

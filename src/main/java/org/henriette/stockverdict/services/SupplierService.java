@@ -11,10 +11,19 @@ import org.hibernate.query.Query;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Service class for managing {@link Supplier} entities.
+ * Handles the creation, updates, and querying of product suppliers.
+ */
 public class SupplierService {
 
-    // ================= ADD SUPPLIER =================
-
+    /**
+     * Adds a new supplier to the system.
+     * Handles re-attaching any detached user entities to the current Hibernate session.
+     *
+     * @param supplier the supplier details to persist
+     * @return true if successfully added, false otherwise
+     */
     public boolean addSupplier(Supplier supplier) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -46,8 +55,12 @@ public class SupplierService {
         }
     }
 
-    // ================= UPDATE SUPPLIER =================
-
+    /**
+     * Updates an existing supplier's details.
+     *
+     * @param updatedSupplier the supplier instance containing the updated information
+     * @return true if successfully updated, false on error or if the supplier wasn't found
+     */
     public boolean updateSupplier(Supplier updatedSupplier) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -84,8 +97,12 @@ public class SupplierService {
         }
     }
 
-    // ================= DELETE SUPPLIER =================
-
+    /**
+     * Deletes a supplier by their unique identifier.
+     *
+     * @param supplierId the ID of the supplier to remove
+     * @return true if successfully deleted, false on error or if the supplier wasn't found
+     */
     public boolean deleteSupplier(Long supplierId) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -114,8 +131,12 @@ public class SupplierService {
         }
     }
 
-    // ================= GET SUPPLIER BY ID =================
-
+    /**
+     * Retrieves a supplier by its unique identifier.
+     *
+     * @param supplierId the ID of the supplier
+     * @return the {@link Supplier} entity if found, null otherwise
+     */
     public Supplier getSupplierById(Long supplierId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -127,8 +148,12 @@ public class SupplierService {
         }
     }
 
-    // ================= GET ALL SUPPLIERS BY USER =================
-
+    /**
+     * Retrieves all suppliers managed by a specific user.
+     *
+     * @param user the manager user
+     * @return a list of {@link Supplier} ordered alphabetically by name
+     */
     public List<Supplier> getSuppliersByUser(Users user) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -145,8 +170,11 @@ public class SupplierService {
         }
     }
 
-    // ================= GET ALL SUPPLIERS =================
-
+    /**
+     * Retrieves all suppliers across the entire system.
+     *
+     * @return a list of all {@link Supplier} ordered alphabetically by name
+     */
     public List<Supplier> getAllSuppliers() {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -162,8 +190,14 @@ public class SupplierService {
         }
     }
 
-    // ================= SEARCH SUPPLIERS =================
-
+    /**
+     * Searches for suppliers managed by a specific user using a keyword.
+     * The search matches against the supplier's name, email, or phone.
+     *
+     * @param user    the user managing the suppliers
+     * @param keyword the search term
+     * @return a list of matching {@link Supplier} entities
+     */
     public List<Supplier> searchSuppliers(Users user, String keyword) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -183,8 +217,13 @@ public class SupplierService {
         }
     }
 
-    // ================= IS EMAIL TAKEN =================
-
+    /**
+     * Checks if an email address is already in use by another supplier.
+     *
+     * @param email             the email address to check
+     * @param excludeSupplierId an optional supplier ID to exclude from the check
+     * @return true if the email is taken, false otherwise
+     */
     public boolean isEmailExists(String email, Long excludeSupplierId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 

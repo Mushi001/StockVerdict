@@ -13,6 +13,11 @@ import org.henriette.stockverdict.services.SupplierService;
 
 import java.io.IOException;
 
+/**
+ * Servlet handling HTTP requests for Stock Entries.
+ * Allows authenticated users to view stock history, filter by product or supplier,
+ * and add or delete stock entries.
+ */
 @WebServlet("/stockEntry")
 public class StockEntryServlet extends HttpServlet {
 
@@ -20,8 +25,20 @@ public class StockEntryServlet extends HttpServlet {
     private final ProductService    productService    = new ProductService();
     private final SupplierService   supplierService   = new SupplierService();
 
-    // ================= DO GET =================
-
+    /**
+     * Handles HTTP GET requests for viewing stock entries.
+     * Actions supported:
+     * <ul>
+     *     <li><code>list</code>: Displays all stock entries managed by the current user.</li>
+     *     <li><code>byProduct</code>: Filters stock entries by a specific product.</li>
+     *     <li><code>bySupplier</code>: Filters stock entries by a specific supplier.</li>
+     * </ul>
+     *
+     * @param req  the {@link HttpServletRequest} containing the query parameters
+     * @param resp the {@link HttpServletResponse} used to forward to the dashboard
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an I/O error occurs
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -70,8 +87,20 @@ public class StockEntryServlet extends HttpServlet {
         }
     }
 
-    // ================= DO POST =================
-
+    /**
+     * Handles HTTP POST requests for modifying stock entries.
+     * Actions supported:
+     * <ul>
+     *     <li><code>addStockEntry</code>: Creates a new stock entry and increments the product's quantity.</li>
+     *     <li><code>deleteStockEntry</code>: Removes a stock entry and reverses the product's quantity increment,
+     *         ensuring the quantity doesn't fall below zero.</li>
+     * </ul>
+     *
+     * @param req  the {@link HttpServletRequest} containing the form data
+     * @param resp the {@link HttpServletResponse} used to redirect upon completion
+     * @throws ServletException if the request could not be handled
+     * @throws IOException      if an I/O error occurs
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {

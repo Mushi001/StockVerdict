@@ -7,6 +7,11 @@ import org.hibernate.cfg.Configuration;
 // import org.henriette.stockverdict.models.Product;
 // import org.henriette.stockverdict.models.Order;
 
+/**
+ * Utility class for managing the Hibernate {@link SessionFactory}.
+ * Handles the initialization of Hibernate, loading the <code>hibernate.cfg.xml</code> configuration,
+ * and registering all entity classes. Provides global access to the SessionFactory.
+ */
 public class HibernateUtil {
 
     private static final SessionFactory sessionFactory;
@@ -36,12 +41,19 @@ public class HibernateUtil {
         }
     }
 
-    // Public method to access SessionFactory
+    /**
+     * Retrieves the globally configured Hibernate {@link SessionFactory}.
+     *
+     * @return the active SessionFactory instance
+     */
     public static SessionFactory getSessionFactory() {
         return sessionFactory;
     }
 
-    // Optional: close the SessionFactory
+    /**
+     * Closes the SessionFactory and releases all resources it holds.
+     * Should be called when the application is shutting down.
+     */
     public static void shutdown() {
         getSessionFactory().close();
     }

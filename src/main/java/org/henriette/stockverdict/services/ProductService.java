@@ -12,10 +12,19 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Service class for managing {@link Products} entities.
+ * Handles product creation, updates, and custom queries such as low stock detection.
+ */
 public class ProductService {
 
-    // ================= ADD PRODUCT =================
-
+    /**
+     * Adds a new product to the database.
+     * Sets the creation and update timestamps before persisting.
+     *
+     * @param product the product entity to add
+     * @return true if the product was successfully added, false otherwise
+     */
     public boolean addProduct(Products product) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -37,8 +46,12 @@ public class ProductService {
         }
     }
 
-    // ================= UPDATE PRODUCT =================
-
+    /**
+     * Updates an existing product's details.
+     *
+     * @param updatedProduct the product entity containing the updated information
+     * @return true if the product was successfully updated, false if not found or on error
+     */
     public boolean updateProduct(Products updatedProduct) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -69,8 +82,12 @@ public class ProductService {
         }
     }
 
-    // ================= DELETE PRODUCT =================
-
+    /**
+     * Deletes a product by its unique identifier.
+     *
+     * @param productId the ID of the product to delete
+     * @return true if the product was successfully deleted, false if not found or on error
+     */
     public boolean deleteProduct(Long productId) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -92,8 +109,12 @@ public class ProductService {
         }
     }
 
-    // ================= GET PRODUCT BY ID =================
-
+    /**
+     * Retrieves a product by its unique identifier.
+     *
+     * @param productId the ID of the product
+     * @return the {@link Products} entity if found, null otherwise
+     */
     public Products getProductById(Long productId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -105,8 +126,12 @@ public class ProductService {
         }
     }
 
-    // ================= GET ALL PRODUCTS BY USER =================
-
+    /**
+     * Retrieves all products managed by a specific user.
+     *
+     * @param user the managing {@link Users}
+     * @return a list of {@link Products} entities ordered by creation date descending
+     */
     public List<Products> getProductsByUser(Users user) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -123,8 +148,11 @@ public class ProductService {
         }
     }
 
-    // ================= GET ALL PRODUCTS =================
-
+    /**
+     * Retrieves all products in the system.
+     *
+     * @return a list of all {@link Products} entities ordered by creation date descending
+     */
     public List<Products> getAllProducts() {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -140,8 +168,12 @@ public class ProductService {
         }
     }
 
-    // ================= GET LOW STOCK PRODUCTS =================
-
+    /**
+     * Retrieves products managed by a user that are below or equal to their reorder level.
+     *
+     * @param user the managing {@link Users}
+     * @return a list of low-stock {@link Products} entities
+     */
     public List<Products> getLowStockProducts(Users user) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -158,8 +190,14 @@ public class ProductService {
         }
     }
 
-    // ================= SEARCH PRODUCTS =================
-
+    /**
+     * Searches for products managed by a specific user using a keyword.
+     * The search matches against either the product name, barcode, or description.
+     *
+     * @param user    the managing {@link Users}
+     * @param keyword the search term
+     * @return a list of matching {@link Products} entities
+     */
     public List<Products> searchProducts(Users user, String keyword) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -179,8 +217,13 @@ public class ProductService {
         }
     }
 
-    // ================= IS BARCODE TAKEN =================
-
+    /**
+     * Checks if a barcode is already associated with another product.
+     *
+     * @param barcode          the barcode to check
+     * @param excludeProductId an optional product ID to exclude from the check
+     * @return true if the barcode belongs to another product, false otherwise
+     */
     public boolean isBarcodeExists(String barcode, Long excludeProductId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 

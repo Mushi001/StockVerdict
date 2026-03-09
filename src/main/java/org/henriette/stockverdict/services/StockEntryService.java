@@ -14,11 +14,19 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Service class for managing {@link StockEntry} entities.
+ * Handles adding new stock, maintaining stock levels, and supply queries.
+ */
 public class StockEntryService {
 
-    // ================= ADD STOCK ENTRY =================
-    // Creates a stock entry AND increases the product's quantityInStock
-
+    /**
+     * Records a new stock entry into the inventory.
+     * Increases the product's available quantity and updates its current purchase price.
+     *
+     * @param entry the stock entry details to persist
+     * @return true if the stock entry was successful, false otherwise
+     */
     public boolean addStockEntry(StockEntry entry) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -50,9 +58,13 @@ public class StockEntryService {
         }
     }
 
-    // ================= DELETE STOCK ENTRY =================
-    // Deletes the entry AND reverses the stock quantity increase
-
+    /**
+     * Deletes an existing stock entry and reverses the corresponding stock increase.
+     * Ensures that the product's quantity doesn't drop below zero.
+     *
+     * @param entryId the ID of the stock entry to remove
+     * @return true if successfully deleted, false on error or if not found
+     */
     public boolean deleteStockEntry(Long entryId) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -83,8 +95,12 @@ public class StockEntryService {
         }
     }
 
-    // ================= GET ENTRY BY ID =================
-
+    /**
+     * Retrieves a stock entry by its unique identifier.
+     *
+     * @param entryId the ID of the stock entry
+     * @return the {@link StockEntry} entity if found, null otherwise
+     */
     public StockEntry getStockEntryById(Long entryId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -96,8 +112,12 @@ public class StockEntryService {
         }
     }
 
-    // ================= GET ALL ENTRIES BY USER =================
-
+    /**
+     * Retrieves all stock entries created by a specific user.
+     *
+     * @param user the user who created the entries
+     * @return a list of {@link StockEntry} ordered chronologically descending
+     */
     public List<StockEntry> getStockEntriesByUser(Users user) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -114,8 +134,12 @@ public class StockEntryService {
         }
     }
 
-    // ================= GET ENTRIES BY PRODUCT =================
-
+    /**
+     * Retrieves all stock entries for a specific product.
+     *
+     * @param product the product whose stock history is requested
+     * @return a list of {@link StockEntry} ordered chronologically descending
+     */
     public List<StockEntry> getStockEntriesByProduct(Products product) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -132,8 +156,12 @@ public class StockEntryService {
         }
     }
 
-    // ================= GET ENTRIES BY SUPPLIER =================
-
+    /**
+     * Retrieves all stock entries fulfilled by a specific supplier.
+     *
+     * @param supplier the supplier whose entries are requested
+     * @return a list of {@link StockEntry} ordered chronologically descending
+     */
     public List<StockEntry> getStockEntriesBySupplier(Supplier supplier) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -150,8 +178,14 @@ public class StockEntryService {
         }
     }
 
-    // ================= GET ENTRIES BY DATE RANGE =================
-
+    /**
+     * Retrieves all stock entries created by a user within a specified date range.
+     *
+     * @param user the user who created the entries
+     * @param from the starting date for the query (inclusive)
+     * @param to   the ending date for the query (inclusive)
+     * @return a list of matching {@link StockEntry} ordered chronologically descending
+     */
     public List<StockEntry> getStockEntriesByDateRange(Users user, LocalDateTime from, LocalDateTime to) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -172,9 +206,13 @@ public class StockEntryService {
         }
     }
 
-    // ================= TOTAL STOCK VALUE BY USER =================
-    // Sum of (quantityAdded * purchasePrice) — useful for dashboard
-
+    /**
+     * Calculates the total financial value of all stock added by a user.
+     * Useful for dashboard summaries to show the total investment in stock.
+     *
+     * @param user the managing user
+     * @return the sum of quantityAdded * purchasePrice for all entries
+     */
     public Double getTotalStockValueByUser(Users user) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
