@@ -1,16 +1,18 @@
 package org.henriette.stockverdict.models;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * Represents a record of stock added to the inventory.
+ * Represents an entry of stock (inventory) for a product.
  * Tracks the quantity added, the purchase price, the product, the supplier, 
  * and the user who generated the entry.
  */
 @Entity
 @Table(name = "stock_entries")
-public class StockEntry {
+public class StockEntry implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The unique identifier for the stock entry.
@@ -22,16 +24,19 @@ public class StockEntry {
     /**
      * The number of items added to the stock.
      */
+    @Column(name = "quantity_added")
     private Integer quantityAdded;
 
     /**
-     * The price at which the batch of items was purchased.
+     * The price at which the stock was purchased.
      */
+    @Column(name = "purchase_price")
     private Double purchasePrice;
 
     /**
      * The date and time when the stock was added.
      */
+    @Column(name = "date_added")
     private LocalDateTime dateAdded;
 
     /**

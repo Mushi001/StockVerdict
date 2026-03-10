@@ -1,6 +1,7 @@
 package org.henriette.stockverdict.models;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -11,7 +12,8 @@ import java.util.List;
  */
 @Entity
 @Table(name = "sales")
-public class Sales {
+public class Sales implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The unique identifier for the sales transaction.
@@ -23,16 +25,19 @@ public class Sales {
     /**
      * The date and time when the sale occurred.
      */
+    @Column(name = "sale_date")
     private LocalDateTime saleDate;
 
     /**
-     * The total monetary amount of the sale.
+     * The total monetary value of the sale.
      */
+    @Column(name = "total_amount")
     private Double totalAmount;
 
     /**
-     * The method of payment used (e.g., Cash, Card).
+     * The method of payment used by the customer.
      */
+    @Column(name = "payment_method")
     private String paymentMethod;
 
     /**

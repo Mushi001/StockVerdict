@@ -26,9 +26,10 @@ public class ProductService {
      * @return true if the product was successfully added, false otherwise
      */
     public boolean addProduct(Products product) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             product.setCreatedAt(LocalDateTime.now());
@@ -40,9 +41,15 @@ public class ProductService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -53,9 +60,10 @@ public class ProductService {
      * @return true if the product was successfully updated, false if not found or on error
      */
     public boolean updateProduct(Products updatedProduct) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             Products existing = session.get(Products.class, updatedProduct.getId());
@@ -76,9 +84,15 @@ public class ProductService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -89,9 +103,10 @@ public class ProductService {
      * @return true if the product was successfully deleted, false if not found or on error
      */
     public boolean deleteProduct(Long productId) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             Products product = session.get(Products.class, productId);
@@ -103,9 +118,15 @@ public class ProductService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -136,9 +157,9 @@ public class ProductService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Products> query = session.createQuery(
-                    "FROM Products WHERE user = :user ORDER BY createdAt DESC",
+                    "FROM Products WHERE user.id = :userId ORDER BY createdAt DESC",
                     Products.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
 
             return query.list();
 
@@ -178,9 +199,9 @@ public class ProductService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Products> query = session.createQuery(
-                    "FROM Products WHERE user = :user AND quantityInStock <= reorderLevel ORDER BY quantityInStock ASC",
+                    "FROM Products WHERE user.id = :userId AND quantityInStock <= reorderLevel ORDER BY quantityInStock ASC",
                     Products.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
 
             return query.list();
 
@@ -202,11 +223,11 @@ public class ProductService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Products> query = session.createQuery(
-                    "FROM Products WHERE user = :user AND " +
+                    "FROM Products WHERE user.id = :userId AND " +
                             "(LOWER(name) LIKE :keyword OR LOWER(barcode) LIKE :keyword OR LOWER(description) LIKE :keyword) " +
                             "ORDER BY name ASC",
                     Products.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
             query.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
 
             return query.list();

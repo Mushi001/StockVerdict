@@ -28,9 +28,10 @@ public class StockEntryService {
      * @return true if the stock entry was successful, false otherwise
      */
     public boolean addStockEntry(StockEntry entry) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             entry.setDateAdded(LocalDateTime.now());
@@ -52,9 +53,15 @@ public class StockEntryService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -66,9 +73,10 @@ public class StockEntryService {
      * @return true if successfully deleted, false on error or if not found
      */
     public boolean deleteStockEntry(Long entryId) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             StockEntry entry = session.get(StockEntry.class, entryId);
@@ -89,9 +97,15 @@ public class StockEntryService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -122,9 +136,9 @@ public class StockEntryService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<StockEntry> query = session.createQuery(
-                    "FROM StockEntry WHERE user = :user ORDER BY dateAdded DESC",
+                    "FROM StockEntry WHERE user.id = :userId ORDER BY dateAdded DESC",
                     StockEntry.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
 
             return query.list();
 
@@ -190,11 +204,11 @@ public class StockEntryService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<StockEntry> query = session.createQuery(
-                    "FROM StockEntry WHERE user = :user " +
+                    "FROM StockEntry WHERE user.id = :userId " +
                             "AND dateAdded >= :from AND dateAdded <= :to " +
                             "ORDER BY dateAdded DESC",
                     StockEntry.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
             query.setParameter("from", from);
             query.setParameter("to", to);
 
@@ -218,9 +232,9 @@ public class StockEntryService {
 
             Query<Double> query = session.createQuery(
                     "SELECT SUM(se.quantityAdded * se.purchasePrice) " +
-                            "FROM StockEntry se WHERE se.user = :user",
+                            "FROM StockEntry se WHERE se.user.id = :userId",
                     Double.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
 
             Double result = query.uniqueResult();
             return result != null ? result : 0.0;

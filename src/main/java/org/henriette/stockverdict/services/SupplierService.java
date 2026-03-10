@@ -25,12 +25,13 @@ public class SupplierService {
      * @return true if successfully added, false otherwise
      */
     public boolean addSupplier(Supplier supplier) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
             
-            // Re-attach detached user entity from HTTP session to current Hibernate Session
+            // Reload user in current session to ensure it's managed
             if (supplier.getUser() != null && supplier.getUser().getId() != null) {
                 Users managedUser = session.get(Users.class, supplier.getUser().getId());
                 supplier.setUser(managedUser);
@@ -42,16 +43,15 @@ public class SupplierService {
             return true;
 
         } catch (Exception e) {
-            System.err.println("Error adding supplier:");
-            e.printStackTrace();
-            if (transaction != null) {
-                try {
-                    transaction.rollback();
-                } catch (Exception rbe) {
-                    System.err.println("Rollback also failed: " + rbe.getMessage());
-                }
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
             }
+            e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -62,9 +62,10 @@ public class SupplierService {
      * @return true if successfully updated, false on error or if the supplier wasn't found
      */
     public boolean updateSupplier(Supplier updatedSupplier) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             Supplier existing = session.get(Supplier.class, updatedSupplier.getId());
@@ -84,16 +85,15 @@ public class SupplierService {
             return true;
 
         } catch (Exception e) {
-            System.err.println("Error updating supplier:");
-            e.printStackTrace();
-            if (transaction != null) {
-                try {
-                    transaction.rollback();
-                } catch (Exception rbe) {
-                    System.err.println("Rollback also failed: " + rbe.getMessage());
-                }
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
             }
+            e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -104,9 +104,10 @@ public class SupplierService {
      * @return true if successfully deleted, false on error or if the supplier wasn't found
      */
     public boolean deleteSupplier(Long supplierId) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             Supplier supplier = session.get(Supplier.class, supplierId);
@@ -118,16 +119,15 @@ public class SupplierService {
             return true;
 
         } catch (Exception e) {
-            System.err.println("Error deleting supplier:");
-            e.printStackTrace();
-            if (transaction != null) {
-                try {
-                    transaction.rollback();
-                } catch (Exception rbe) {
-                    System.err.println("Rollback also failed: " + rbe.getMessage());
-                }
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
             }
+            e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -158,9 +158,9 @@ public class SupplierService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Supplier> query = session.createQuery(
-                    "FROM Supplier WHERE user = :user ORDER BY name ASC",
+                    "FROM Supplier WHERE user.id = :userId ORDER BY name ASC",
                     Supplier.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
 
             return query.list();
 
@@ -202,11 +202,11 @@ public class SupplierService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Supplier> query = session.createQuery(
-                    "FROM Supplier WHERE user = :user AND " +
+                    "FROM Supplier WHERE user.id = :userId AND " +
                             "(LOWER(name) LIKE :keyword OR LOWER(email) LIKE :keyword OR LOWER(phone) LIKE :keyword) " +
                             "ORDER BY name ASC",
                     Supplier.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
             query.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
 
             return query.list();
@@ -218,21 +218,23 @@ public class SupplierService {
     }
 
     /**
-     * Checks if an email address is already in use by another supplier.
+     * Checks if an email address is already in use by another supplier for the same user.
      *
      * @param email             the email address to check
+     * @param userId            the ID of the user owning the supplier
      * @param excludeSupplierId an optional supplier ID to exclude from the check
-     * @return true if the email is taken, false otherwise
+     * @return true if the email is taken by another supplier managed by this user, false otherwise
      */
-    public boolean isEmailExists(String email, Long excludeSupplierId) {
+    public boolean isEmailExists(String email, Long userId, Long excludeSupplierId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             String hql = excludeSupplierId != null
-                    ? "SELECT COUNT(s.id) FROM Supplier s WHERE s.email = :email AND s.id != :excludeId"
-                    : "SELECT COUNT(s.id) FROM Supplier s WHERE s.email = :email";
+                    ? "SELECT COUNT(s.id) FROM Supplier s WHERE s.email = :email AND s.user.id = :userId AND s.id != :excludeId"
+                    : "SELECT COUNT(s.id) FROM Supplier s WHERE s.email = :email AND s.user.id = :userId";
 
             Query<Long> query = session.createQuery(hql, Long.class);
             query.setParameter("email", email);
+            query.setParameter("userId", userId);
             if (excludeSupplierId != null) query.setParameter("excludeId", excludeSupplierId);
 
             Long count = query.uniqueResult();

@@ -26,9 +26,10 @@ public class CustomerService {
      * @return true if the customer was successfully added, false otherwise
      */
     public boolean addCustomer(Customer customer) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             customer.setCreatedAt(LocalDateTime.now());
@@ -40,9 +41,15 @@ public class CustomerService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -53,9 +60,10 @@ public class CustomerService {
      * @return true if the customer was successfully updated, false if not found or on error
      */
     public boolean updateCustomer(Customer updatedCustomer) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             Customer existing = session.get(Customer.class, updatedCustomer.getId());
@@ -73,9 +81,15 @@ public class CustomerService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -86,9 +100,10 @@ public class CustomerService {
      * @return true if the customer was successfully deleted, false if not found or on error
      */
     public boolean deleteCustomer(Long customerId) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             Customer customer = session.get(Customer.class, customerId);
@@ -100,9 +115,15 @@ public class CustomerService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -133,9 +154,9 @@ public class CustomerService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Customer> query = session.createQuery(
-                    "FROM Customer WHERE user = :user ORDER BY name ASC",
+                    "FROM Customer WHERE user.id = :userId ORDER BY name ASC",
                     Customer.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
 
             return query.list();
 
@@ -177,11 +198,11 @@ public class CustomerService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Customer> query = session.createQuery(
-                    "FROM Customer WHERE user = :user AND " +
+                    "FROM Customer WHERE user.id = :userId AND " +
                             "(LOWER(name) LIKE :keyword OR LOWER(email) LIKE :keyword OR LOWER(phone) LIKE :keyword) " +
                             "ORDER BY name ASC",
                     Customer.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
             query.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
 
             return query.list();
@@ -229,9 +250,9 @@ public class CustomerService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Long> query = session.createQuery(
-                    "SELECT COUNT(c.id) FROM Customer c WHERE c.user = :user",
+                    "SELECT COUNT(c.id) FROM Customer c WHERE c.user.id = :userId",
                     Long.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
 
             return query.uniqueResult();
 

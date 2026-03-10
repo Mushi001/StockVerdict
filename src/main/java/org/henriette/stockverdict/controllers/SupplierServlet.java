@@ -126,8 +126,8 @@ public class SupplierServlet extends HttpServlet {
                 System.out.println("[Supplier] Adding supplier: " + name);
 
                 // Check duplicate email
-                if (email != null && !email.isBlank() && supplierService.isEmailExists(email, null)) {
-                    System.out.println("[Supplier] Email already exists: " + email);
+                if (email != null && !email.isBlank() && supplierService.isEmailExists(email, loggedInUser.getId(), null)) {
+                    System.out.println("[Supplier] Email already exists for this user: " + email);
                     resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=supplierEmailExists");
                     return;
                 }
@@ -161,8 +161,8 @@ public class SupplierServlet extends HttpServlet {
                 System.out.println("[Supplier] Updating supplier: " + id);
 
                 // Check duplicate email excluding this supplier
-                if (email != null && !email.isBlank() && supplierService.isEmailExists(email, id)) {
-                    System.out.println("[Supplier] Email already exists: " + email);
+                if (email != null && !email.isBlank() && supplierService.isEmailExists(email, loggedInUser.getId(), id)) {
+                    System.out.println("[Supplier] Email already exists for this user: " + email);
                     resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=supplierEmailExists");
                     return;
                 }

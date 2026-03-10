@@ -31,9 +31,10 @@ public class SaleService {
      * @return true if the sale was successfully created, false if items were out of stock or on error
      */
     public boolean createSale(Sales sale, List<SaleItem> items) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             // Validate stock availability for every item first
@@ -73,9 +74,15 @@ public class SaleService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -87,9 +94,10 @@ public class SaleService {
      * @return true if successfully deleted, false on error or if not found
      */
     public boolean deleteSale(Long saleId) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             Sales sale = session.get(Sales.class, saleId);
@@ -112,9 +120,15 @@ public class SaleService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -145,9 +159,9 @@ public class SaleService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Sales> query = session.createQuery(
-                    "FROM Sales WHERE user = :user ORDER BY saleDate DESC",
+                    "FROM Sales WHERE user.id = :userId ORDER BY saleDate DESC",
                     Sales.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
 
             return query.list();
 
@@ -213,11 +227,11 @@ public class SaleService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Sales> query = session.createQuery(
-                    "FROM Sales WHERE user = :user " +
+                    "FROM Sales WHERE user.id = :userId " +
                             "AND saleDate >= :from AND saleDate <= :to " +
                             "ORDER BY saleDate DESC",
                     Sales.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
             query.setParameter("from", from);
             query.setParameter("to", to);
 
@@ -239,9 +253,9 @@ public class SaleService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Double> query = session.createQuery(
-                    "SELECT SUM(s.totalAmount) FROM Sales s WHERE s.user = :user",
+                    "SELECT SUM(s.totalAmount) FROM Sales s WHERE s.user.id = :userId",
                     Double.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
 
             Double result = query.uniqueResult();
             return result != null ? result : 0.0;
@@ -264,10 +278,10 @@ public class SaleService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Double> query = session.createQuery(
-                    "SELECT SUM(s.totalAmount) FROM Sales s WHERE s.user = :user " +
+                    "SELECT SUM(s.totalAmount) FROM Sales s WHERE s.user.id = :userId " +
                             "AND s.saleDate >= :from AND s.saleDate <= :to",
                     Double.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
             query.setParameter("from", from);
             query.setParameter("to", to);
 
@@ -290,9 +304,9 @@ public class SaleService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Long> query = session.createQuery(
-                    "SELECT COUNT(s.id) FROM Sales s WHERE s.user = :user",
+                    "SELECT COUNT(s.id) FROM Sales s WHERE s.user.id = :userId",
                     Long.class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
 
             return query.uniqueResult();
 
@@ -314,11 +328,11 @@ public class SaleService {
 
             Query<Object[]> query = session.createQuery(
                     "SELECT si.product.name, SUM(si.quantity) as totalQty " +
-                            "FROM SaleItem si WHERE si.sale.user = :user " +
+                            "FROM SaleItem si WHERE si.sale.user.id = :userId " +
                             "GROUP BY si.product.name " +
                             "ORDER BY totalQty DESC",
                     Object[].class);
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
             query.setMaxResults(limit);
 
             return query.list();

@@ -4,16 +4,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 
 /**
- * Represents a user in the StockVerdict system (e.g., Trader, Admin).
- * Contains authentication details, roles, and auditing timestamps.
+ * Represents a system user (Trader or Admin).
+ * Contains authentication details, profile information, and role-based access control.
  */
 @Entity
 @Table(name = "users")
-public class Users {
+public class Users implements Serializable {
+    private static final long serialVersionUID = 1L;
         /**
          * The unique identifier for the user.
          */
@@ -48,11 +50,13 @@ public class Users {
         /**
          * The timestamp indicating when the user account was created.
          */
+        @Column(name = "created_at")
         private LocalDateTime createdAt;
 
         /**
          * The timestamp indicating the last time the user account was updated.
          */
+        @Column(name = "updated_at")
         private LocalDateTime updatedAt;
 
         // Constructors

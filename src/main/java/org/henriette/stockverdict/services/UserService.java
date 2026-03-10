@@ -48,10 +48,11 @@ public class UserService {
      * @return true if successfully registered, false on error
      */
     public boolean registerUser(Users user) {
+        Session session = null;
         Transaction transaction = null;
 
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             user.setPassword(hashPassword(user.getPassword()));
@@ -64,9 +65,15 @@ public class UserService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -107,28 +114,59 @@ public class UserService {
      * @param otpCode    the raw OTP string
      * @param expiryTime the absolute expiration time
      */
-    public void saveOtp(Users user, String otpCode, LocalDateTime expiryTime) {
-
+    public boolean saveOtp(Users user, String otpCode, LocalDateTime expiryTime) {
+        Session session = null;
         Transaction transaction = null;
 
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            System.out.println("[DEBUG] saveOtp started for User ID: " + user.getId());
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
+            System.out.println("[DEBUG] Deleting old OTPs...");
+            // Use user.id for HQL to avoid detached entity issues
             Query<?> deleteQuery = session.createQuery(
-                    "DELETE FROM Otp WHERE user = :user AND used = false");
+                    "DELETE FROM Otp WHERE user.id = :userId AND used = false");
+            deleteQuery.setParameter("userId", user.getId());
+            int deletedCount = deleteQuery.executeUpdate();
+            System.out.println("[DEBUG] Deleted " + deletedCount + " unused OTPs");
 
-            deleteQuery.setParameter("user", user);
-            deleteQuery.executeUpdate();
+            // Reload user in current session to ensure it's managed
+            System.out.println("[DEBUG] Loading managed user...");
+            Users managedUser = session.get(Users.class, user.getId());
+            if (managedUser == null) {
+                System.out.println("[ERROR] Managed user not found for ID: " + user.getId());
+                throw new RuntimeException("User not found in database for ID: " + user.getId());
+            }
 
-            Otp otp = new Otp(user, otpCode, expiryTime);
+            Otp otp = new Otp(managedUser, otpCode, expiryTime);
+            System.out.println("[DEBUG] Persisting new OTP: " + otpCode);
             session.persist(otp);
-
+            
+            System.out.println("[DEBUG] Committing transaction...");
             transaction.commit();
+            System.out.println("[DEBUG] OTP saved successfully");
+            return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            System.err.println("[CRITICAL ERROR] Transaction failed in saveOtp: " + e.getMessage());
             e.printStackTrace();
+            
+            if (transaction != null && transaction.isActive()) {
+                try {
+                    System.out.println("[DEBUG] Attempting rollback...");
+                    transaction.rollback();
+                    System.out.println("[DEBUG] Rollback successful");
+                } catch (Exception rollbackEx) {
+                    System.err.println("[ERROR] Rollback failed: " + rollbackEx.getMessage());
+                }
+            }
+            return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+                System.out.println("[DEBUG] Session closed");
+            }
         }
     }
 
@@ -139,21 +177,23 @@ public class UserService {
      * @return the latest {@link Otp} instance, or null if none exist
      */
     public Otp getLatestOtp(Users user) {
-
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Otp> query = session.createQuery(
-                    "FROM Otp WHERE user = :user ORDER BY expiryTime DESC",
+                    "FROM Otp WHERE user.id = :userId ORDER BY id DESC",
                     Otp.class);
 
-            query.setParameter("user", user);
+            query.setParameter("userId", user.getId());
             query.setMaxResults(1);
 
             List<Otp> list = query.list();
 
             if (!list.isEmpty()) {
-                return list.get(0);
+                Otp otp = list.get(0);
+                System.out.println("[DEBUG] getLatestOtp for User " + user.getId() + ": " + otp.getOtpCode() + " (Used: " + otp.isUsed() + ")");
+                return otp;
             }
+            System.out.println("[DEBUG] No OTP found for User " + user.getId());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -168,11 +208,11 @@ public class UserService {
      * @param otp the OTP record to update
      */
     public void markOtpAsUsed(Otp otp) {
-
+        Session session = null;
         Transaction transaction = null;
 
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             otp.setUsed(true);
@@ -181,8 +221,14 @@ public class UserService {
             transaction.commit();
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -332,19 +378,15 @@ public class UserService {
      * @return true if updated, false if the user was not found
      */
     public boolean updateUser(Users updatedUser) {
-
+        Session session = null;
         Transaction transaction = null;
 
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
-            // Find existing user by email
-            Query<Users> query = session.createQuery(
-                    "FROM Users WHERE email = :email", Users.class);
-            query.setParameter("email", updatedUser.getEmail());
-
-            Users existingUser = query.uniqueResult();
+            // Find existing user by ID (using ID is safer than email for detached entities)
+            Users existingUser = session.get(Users.class, updatedUser.getId());
 
             if (existingUser == null) return false;
 
@@ -353,15 +395,21 @@ public class UserService {
             existingUser.setPassword(hashPassword(updatedUser.getPassword()));
             existingUser.setUpdatedAt(LocalDateTime.now());
 
-            session.update(existingUser);
+            session.merge(existingUser);
 
             transaction.commit();
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
@@ -372,8 +420,11 @@ public class UserService {
      * @return true if successfully erased, false if missing or failed
      */
     public boolean deleteUser(Long userId) {
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
             Users user = session.get(Users.class, userId);
@@ -384,9 +435,15 @@ public class UserService {
             return true;
 
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 }

@@ -201,26 +201,30 @@ public class UserServlet extends HttpServlet {
         String email    = request.getParameter("email");
         String password = request.getParameter("password");
 
+        System.out.println("[DEBUG] Login attempt for email: " + email);
         Users user = userService.loginUser(email, password);
 
         if (user != null) {
             String otpCode = String.valueOf((int)(Math.random() * 900000) + 100000);
             java.time.LocalDateTime expiry = java.time.LocalDateTime.now().plusMinutes(5);
 
-            userService.saveOtp(user, otpCode, expiry);
+            if (userService.saveOtp(user, otpCode, expiry)) {
+                boolean emailSent = userService.sendOtpEmail(user.getEmail(), otpCode);
 
-            boolean emailSent = userService.sendOtpEmail(user.getEmail(), otpCode);
+                if (!emailSent) {
+                    request.setAttribute("error", "Unable to send OTP email right now. Please configure SMTP settings.");
+                    request.getRequestDispatcher("/login.jsp").forward(request, response);
+                    return;
+                }
 
-            if (!emailSent) {
-                request.setAttribute("error", "Unable to send OTP email right now. Please contact support or configure SMTP settings.");
+                HttpSession session = request.getSession();
+                session.setAttribute("pendingUserId", user.getId());
+                System.out.println("[LOGIN] Session ID: " + session.getId() + " | pendingUserId: " + user.getId());
+                response.sendRedirect(request.getContextPath() + "/verifyOtp.jsp");
+            } else {
+                request.setAttribute("error", "System error: Failed to generate and save verification code. Check database connection.");
                 request.getRequestDispatcher("/login.jsp").forward(request, response);
-                return;
             }
-
-            HttpSession session = request.getSession();
-            session.setAttribute("pendingUserId", user.getId());
-            System.out.println("[LOGIN] Session ID: " + session.getId() + " | pendingUserId: " + user.getId());
-            response.sendRedirect(request.getContextPath() + "/verifyOtp.jsp");
 
         } else {
             request.setAttribute("error", "Invalid email or password");
@@ -243,7 +247,8 @@ public class UserServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String enteredOtp = request.getParameter("otp");
-        System.out.println("[OTP] Entered OTP: " + enteredOtp);
+        if (enteredOtp != null) enteredOtp = enteredOtp.trim();
+        System.out.println("[DEBUG] Entered OTP (trimmed): '" + enteredOtp + "'");
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("pendingUserId") == null) {
@@ -280,7 +285,7 @@ public class UserServlet extends HttpServlet {
         }
 
         if (!otp.getOtpCode().equals(enteredOtp)) {
-            System.out.println("[OTP] Incorrect OTP. Expected: " + otp.getOtpCode() + ", Got: " + enteredOtp);
+            System.out.println("[DEBUG] OTP MISMATCH - Expected: '" + otp.getOtpCode() + "', Got: '" + enteredOtp + "'");
             request.setAttribute("error", "Incorrect OTP.");
             request.getRequestDispatcher("/verifyOtp.jsp").forward(request, response);
             return;
@@ -326,7 +331,14 @@ public class UserServlet extends HttpServlet {
         Users user = new Users(name, email, password, role);
         user.setUpdatedAt(java.time.LocalDateTime.now());
 
-        if (userService.updateUser(user)) {
+        // FIX: Must set ID from current session user
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("currentUser") != null) {
+            Users currentUser = (Users) session.getAttribute("currentUser");
+            user.setId(currentUser.getId());
+        }
+
+        if (user.getId() != null && userService.updateUser(user)) {
             request.setAttribute("success", "User updated successfully");
         } else {
             request.setAttribute("error", "Update failed");

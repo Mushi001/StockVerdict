@@ -1,6 +1,7 @@
 package org.henriette.stockverdict.models;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 
 /**
  * Represents an individual item within a sale transaction.
@@ -8,7 +9,8 @@ import jakarta.persistence.*;
  */
 @Entity
 @Table(name = "sale_items")
-public class SaleItem {
+public class SaleItem implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The unique identifier for the sale item.
@@ -25,6 +27,7 @@ public class SaleItem {
     /**
      * The price of the product at the time of the sale.
      */
+    @Column(name = "price_at_sale")
     private Double priceAtSale;
 
     /**

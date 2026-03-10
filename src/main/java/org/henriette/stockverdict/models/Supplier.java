@@ -1,6 +1,7 @@
 package org.henriette.stockverdict.models;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -9,7 +10,8 @@ import java.util.List;
  */
 @Entity
 @Table(name = "suppliers")
-public class Supplier {
+public class Supplier implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The unique identifier for the supplier.
@@ -42,11 +44,13 @@ public class Supplier {
     /**
      * The name of the primary contact person at the supplier's company.
      */
+    @Column(name = "contact_person")
     private String contactPerson;
 
     /**
      * The outstanding balance owed to this supplier.
      */
+    @Column(name = "balance_owed")
     private double balanceOwed;
 
     /**

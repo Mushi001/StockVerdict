@@ -1,16 +1,17 @@
 package org.henriette.stockverdict.models;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Represents a product in the StockVerdict inventory.
- * Stores details such as pricing, stock levels, and associated suppliers and sales.
+ * Represents a product available for sale.
  */
 @Entity
 @Table(name = "products")
-public class Products {
+public class Products implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The unique identifier for the product.
@@ -38,33 +39,37 @@ public class Products {
     /**
      * The price at which the product is purchased from the supplier.
      */
-    @Column(nullable = false)
+    @Column(name = "purchase_price", nullable = false)
     private Double purchasePrice;
 
     /**
-     * The price at which the product is sold to the customer.
+     * The price at which the product is sold to customers.
      */
-    @Column(nullable = false)
+    @Column(name = "selling_price", nullable = false)
     private Double sellingPrice;
 
     /**
-     * The current quantity of the product available in stock.
+     * The current quantity available in stock.
      */
+    @Column(name = "quantity_in_stock")
     private Integer quantityInStock;
 
     /**
-     * The minimum stock level at which a reorder should be triggered.
+     * The minimum quantity threshold before a restock is needed.
      */
+    @Column(name = "reorder_level")
     private Integer reorderLevel;
 
     /**
-     * The timestamp when this product record was created.
+     * The timestamp when the product was added to the system.
      */
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     /**
-     * The timestamp when this product record was last updated.
+     * The timestamp when the product record was last updated.
      */
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     /**

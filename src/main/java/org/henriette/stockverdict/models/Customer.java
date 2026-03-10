@@ -1,6 +1,7 @@
 package org.henriette.stockverdict.models;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -9,7 +10,8 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "customers")
-public class Customer {
+public class Customer implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The unique identifier for the customer.
@@ -42,11 +44,13 @@ public class Customer {
     /**
      * The timestamp when the customer record was created.
      */
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     /**
      * The timestamp when the customer record was last updated.
      */
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     /**

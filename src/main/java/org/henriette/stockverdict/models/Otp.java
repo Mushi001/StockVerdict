@@ -1,6 +1,7 @@
 package org.henriette.stockverdict.models;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -9,7 +10,8 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "user_otps")
-public class Otp {
+public class Otp implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The unique identifier for the OTP record.
@@ -28,13 +30,13 @@ public class Otp {
     /**
      * The generated OTP string.
      */
-    @Column(nullable = false)
+    @Column(name = "otp_code", nullable = false)
     private String otpCode;
 
     /**
      * The timestamp indicating when the OTP expires.
      */
-    @Column(nullable = false)
+    @Column(name = "expiry_time", nullable = false)
     private LocalDateTime expiryTime;
 
     /**
