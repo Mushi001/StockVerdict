@@ -1,5 +1,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
 <c:if test="${empty sessionScope.currentUser}">
@@ -37,18 +38,20 @@
             --amber:      #ffb300;
         }
         [data-theme="light"] {
-            --green:      #00a84a;
-            --green-dim:  #007a35;
-            --green-glow: rgba(0,168,74,0.12);
-            --bg:         #f0faf2;
+            --green:      #008b3e;
+            --green-dim:  #006b2e;
+            --green-glow: rgba(0,139,62,0.1);
+            --bg:         #f4fdf6;
             --bg-card:    #ffffff;
-            --bg-sidebar: #e8f5ec;
-            --border:     rgba(0,150,60,0.18);
-            --border-hi:  rgba(0,150,60,0.45);
-            --text:       #0a2e12;
-            --text-sub:   #2d6e3e;
-            --muted:      #4a8a5a;
-            --surface:    rgba(210,240,218,0.7);
+            --bg-sidebar: #e1f2e5;
+            --border:     rgba(0,100,40,0.12);
+            --border-hi:  rgba(0,100,40,0.3);
+            --text:       #051a0b;
+            --text-sub:   #1b4d2b;
+            --muted:      #457a53;
+            --surface:    rgba(255,255,255,0.8);
+            --red:        #d32f2f;
+            --amber:      #f57c00;
         }
 
         body {
@@ -155,6 +158,18 @@
             margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
             gap: 16px; flex-wrap: wrap;
         }
+        .topbar-title {
+            font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700;
+            color: var(--text); letter-spacing: 0.1em; text-transform: uppercase;
+        }
+        .menu-toggle {
+            display: none; background: none; border: none; color: var(--text);
+            font-size: 20px; cursor: pointer; margin-right: 12px; transition: color 0.2s;
+        }
+        .menu-toggle:hover { color: var(--green); }
+        @media(max-width:900px) {
+            .menu-toggle { display: block; }
+        }
         .sec-eyebrow {
             font-family: 'Rajdhani', sans-serif; font-size: 10px; letter-spacing: 0.26em;
             text-transform: uppercase; color: var(--green); margin-bottom: 4px;
@@ -178,7 +193,7 @@
         .btn-primary:active { transform: scale(0.98); }
 
         /* ── STATS ── */
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
         .stat-card {
             background: var(--surface); border: 1px solid var(--border);
             padding: 24px; position: relative; overflow: hidden; border-radius: 4px;
@@ -338,7 +353,7 @@
 <body>
 
 <aside class="sidebar" id="sidebar">
-    <a href="${pageContext.request.contextPath}/traderDashboard.jsp" class="sidebar-brand">
+    <a href="${pageContext.request.contextPath}/dashboard" class="sidebar-brand">
         <img src="${pageContext.request.contextPath}/logo2.png" class="sidebar-logo" alt="Logo"/>
         <span class="sidebar-name">StockVerdict</span>
     </a>
@@ -352,23 +367,26 @@
         <a href="/" class="nav-item">
             <span class="nav-icon"><i class="fas fa-home"></i></span> Home
         </a>
-        <a class="nav-item active" onclick="showSection('dashboard', this)">
+        <a id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard', this)">
             <span class="nav-icon"><i class="fas fa-th-large"></i></span> Dashboard
         </a>
-        <a class="nav-item" href="${pageContext.request.contextPath}/sales.jsp">
+        <a id="nav-sales" class="nav-item" onclick="showSection('sales', this)">
             <span class="nav-icon"><i class="fas fa-chart-line"></i></span> Sales
         </a>
 
         <div class="nav-section-label">Inventory</div>
-        <a class="nav-item" onclick="showSection('stock', this)">
+        <a id="nav-stock" class="nav-item" onclick="showSection('stock', this)">
             <span class="nav-icon"><i class="fas fa-cubes"></i></span> Stock Management
         </a>
-        <a class="nav-item" onclick="showSection('suppliers', this)">
+        <a id="nav-suppliers" class="nav-item" onclick="showSection('suppliers', this)">
             <span class="nav-icon"><i class="fas fa-handshake"></i></span> Suppliers
+        </a>
+        <a id="nav-customers" class="nav-item" onclick="showSection('customers', this)">
+            <span class="nav-icon"><i class="fas fa-users"></i></span> Customers
         </a>
 
         <div class="nav-section-label">Account</div>
-        <a class="nav-item" href="${pageContext.request.contextPath}/settings.jsp">
+        <a id="nav-settings" class="nav-item" onclick="showSection('settings', this)">
             <span class="nav-icon"><i class="fas fa-cog"></i></span> Settings
         </a>
         <button class="nav-item danger" onclick="openLogoutModal()">
@@ -386,37 +404,43 @@
 <div class="main-content">
     <div class="topbar">
         <div class="topbar-left">
-            <button class="back-button" onclick="goBack()" title="Go back to previous page">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            <span class="topbar-title" id="topbarTitle">Dashboard</span>
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <div class="topbar-title" id="topbarTitle">Dashboard</div>
         </div>
         <div class="topbar-right">
             <button class="btn-theme" id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light theme">
                 <i class="fas fa-moon"></i>
             </button>
-            <a href="${pageContext.request.contextPath}/user?action=logout" class="btn-logout-top">
+            <button type="button" onclick="openLogoutModal()" class="btn-logout-top">
                 <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
+            </button>
         </div>
     </div>
 
     <!-- ══ DASHBOARD ══ -->
     <div class="page-section active" id="sec-dashboard">
-        <c:if test="${not empty param.success}">
-            <div class="alert alert-success"><i class="fas fa-check-circle"></i> Operation completed successfully.</div>
+        <c:if test="${not empty param.success || not empty success}">
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> ${not empty success ? success : 'Operation completed successfully.'}
+            </div>
         </c:if>
-        <c:if test="${param.error == 'invalidPrice'}">
+        <c:if test="${param.error == 'invalidPrice' || error == 'invalidPrice'}">
             <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Error: Selling Price cannot be lower than Cost Price.</div>
         </c:if>
-        <c:if test="${param.error == 'barcodeExists'}">
+        <c:if test="${param.error == 'barcodeExists' || error == 'barcodeExists'}">
             <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Error: A product with this barcode already exists.</div>
         </c:if>
-        <c:if test="${param.error == 'supplierEmailExists'}">
+        <c:if test="${param.error == 'supplierEmailExists' || error == 'supplierEmailExists'}">
             <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Error: A supplier with this email already exists.</div>
         </c:if>
-        <c:if test="${not empty param.error && param.error != 'invalidPrice' && param.error != 'barcodeExists' && param.error != 'supplierEmailExists'}">
-            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> An error occurred. Please try again.</div>
+        <c:if test="${param.error == 'customerEmailExists' || error == 'customerEmailExists'}">
+            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Error: A customer with this email already exists.</div>
+        </c:if>
+        <c:if test="${not empty param.error || not empty error}">
+            <c:set var="errCode" value="${not empty error ? error : param.error}"/>
+            <c:if test="${errCode != 'invalidPrice' && errCode != 'barcodeExists' && errCode != 'supplierEmailExists' && errCode != 'customerEmailExists'}">
+                <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> ${not empty error ? error : 'An error occurred. Please try again.'}</div>
+            </c:if>
         </c:if>
 
         <div class="sec-header">
@@ -448,10 +472,15 @@
                 <div class="stat-val"><c:choose><c:when test="${not empty totalSuppliers}">${totalSuppliers}</c:when><c:otherwise>0</c:otherwise></c:choose></div>
                 <div class="stat-hint">Active partners</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-lbl">Customers</div>
+                <div class="stat-val"><c:choose><c:when test="${not empty totalCustomers}">${totalCustomers}</c:when><c:otherwise>0</c:otherwise></c:choose></div>
+                <div class="stat-hint">Registered clients</div>
+            </div>
         </div>
 
         <div class="cta-buttons">
-            <a href="${pageContext.request.contextPath}/sales.jsp" class="btn-primary"><i class="fas fa-plus-circle"></i> New Sale</a>
+            <button class="btn-primary" onclick="showSection('sales',null); openAddSaleModal()"><i class="fas fa-plus-circle"></i> New Sale</button>
             <button class="btn-primary" onclick="showSection('stock',null); openAddProductModal()"><i class="fas fa-plus-circle"></i> Add Product</button>
             <button class="btn-primary" onclick="showSection('suppliers',null); openAddSupplierModal()"><i class="fas fa-plus-circle"></i> Add Supplier</button>
         </div>
@@ -459,7 +488,7 @@
         <div class="table-wrap">
             <div class="table-hdr">
                 <span class="table-hdr-title">Recent Sales</span>
-                <a href="${pageContext.request.contextPath}/sales.jsp" style="font-size:11px;color:var(--green);text-decoration:none;">View All →</a>
+                <a onclick="showSection('sales', document.getElementById('nav-sales'))" style="font-size:11px;color:var(--green);text-decoration:none;cursor:pointer;">View All <i class="fas fa-arrow-right" style="font-size:9px;margin-left:4px;"></i></a>
             </div>
             <c:choose>
                 <c:when test="${empty recentSales}">
@@ -472,9 +501,8 @@
                         <c:forEach var="s" items="${recentSales}">
                             <tr>
                                 <td class="td-muted"><fmt:formatDate value="${s.saleDate}" pattern="dd MMM yyyy"/></td>
-                                <td class="td-green">${s.saleItems[0].product.name}</td>
-                                <td>${s.saleItems[0].quantity}</td>
-                                <td class="td-green">Rwf <fmt:formatNumber value="${s.totalAmount}" pattern="#,##0.00"/></td>
+                                <td class="td-green"><c:choose><c:when test="${not empty s.saleItems}">${s.saleItems[0].product.name}</c:when><c:otherwise>—</c:otherwise></c:choose></td>
+                                <td>Rwf <fmt:formatNumber value="${s.totalAmount}" pattern="#,##0"/></td>
                                 <td><span class="badge badge-green">Completed</span></td>
                             </tr>
                         </c:forEach>
@@ -556,7 +584,7 @@
                                 </td>
                                 <td>
                                     <div class="action-btns">
-                                        <button class="btn-edit" onclick="openEditProductModal('${p.id}','${p.name}','${p.barcode}','${p.purchasePrice}','${p.sellingPrice}','${p.quantityInStock}','${p.reorderLevel}','${p.supplier != null ? p.supplier.id : ''}')">Edit</button>
+                                        <button class="btn-edit" onclick="openEditProductModal('${p.id}','${p.name}','${p.barcode}','${p.purchasePrice}','${p.sellingPrice}','${p.quantityInStock}','${p.reorderLevel}','${p.supplier.id}')">Edit</button>
                                         <button class="btn-del"  onclick="openDeleteProductModal('${p.id}','${p.name}')">Delete</button>
                                     </div>
                                 </td>
@@ -650,6 +678,181 @@
         </div>
     </div>
 
+    <!-- ══ CUSTOMER MANAGEMENT ══ -->
+    <div class="page-section" id="sec-customers">
+        <div class="sec-header">
+            <div>
+                <div class="sec-eyebrow">Client Base</div>
+                <div class="sec-title">Customer Management</div>
+                <div class="sec-sub">View and manage your registered customers and their contact details</div>
+            </div>
+            <button class="btn-primary" onclick="openAddCustomerModal()"><i class="fas fa-plus-circle"></i> Add Customer</button>
+        </div>
+
+        <div class="table-wrap">
+            <div class="table-hdr">
+                <span class="table-hdr-title">Customer List</span>
+                <span class="table-hdr-count"><c:choose><c:when test="${not empty customerList}">${customerList.size()} customers</c:when><c:otherwise>0 customers</c:otherwise></c:choose></span>
+            </div>
+            <c:choose>
+                <c:when test="${empty customerList}">
+                    <div class="empty-state"><div class="empty-icon"><i class="fas fa-users"></i></div>No customers registered yet.</div>
+                </c:when>
+                <c:otherwise>
+                    <table>
+                        <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Date Added</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        <c:forEach var="cust" items="${customerList}" varStatus="vs">
+                            <tr>
+                                <td class="td-muted">${vs.count}</td>
+                                <td class="td-green">${cust.name}</td>
+                                <td class="td-muted">${cust.phone}</td>
+                                <td class="td-muted">${cust.email}</td>
+                                <td class="td-muted">${cust.address}</td>
+                                <td class="td-muted"><fmt:formatDate value="${cust.createdAt}" pattern="dd MMM yyyy"/></td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="btn-edit" 
+                                                data-id="${cust.id}" 
+                                                data-name="${fn:escapeXml(cust.name)}" 
+                                                data-phone="${cust.phone}" 
+                                                data-email="${cust.email}" 
+                                                data-address="${fn:escapeXml(cust.address)}"
+                                                onclick="openEditCustomerModalFromBtn(this)">Edit</button>
+                                        <button class="btn-del"  
+                                                data-id="${cust.id}" 
+                                                data-name="${fn:escapeXml(cust.name)}"
+                                                onclick="openDeleteCustomerModalFromBtn(this)">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </c:forEach>
+                        </tbody>
+                    </table>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+
+    <!-- ══ SALES MANAGEMENT ══ -->
+    <div class="page-section" id="sec-sales">
+        <div class="sec-header">
+            <div>
+                <div class="sec-eyebrow">Trader Panel</div>
+                <div class="sec-title">Sales Management</div>
+                <div class="sec-sub">Record, track, and manage your sales transactions</div>
+            </div>
+            <button class="btn-primary" onclick="openAddSaleModal()">
+                <i class="fa-solid fa-plus"></i> Add New Sale
+            </button>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-lbl">Total Sales</div>
+                <div class="stat-val"><c:choose><c:when test="${not empty salesList}">${salesList.size()}</c:when><c:otherwise>0</c:otherwise></c:choose></div>
+                <div class="stat-hint">In current view</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-lbl">Total Revenue</div>
+                <div class="stat-val">Rwf <c:choose><c:when test="${not empty totalRevenue}"><fmt:formatNumber value="${totalRevenue}" pattern="#,##0.00"/></c:when><c:otherwise>0.00</c:otherwise></c:choose></div>
+                <div class="stat-hint">Current filter</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-lbl">This Month</div>
+                <div class="stat-val">Rwf <c:choose><c:when test="${not empty monthRevenue}"><fmt:formatNumber value="${monthRevenue}" pattern="#,##0.00"/></c:when><c:otherwise>0.00</c:otherwise></c:choose></div>
+                <div class="stat-hint">Current month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-lbl">Avg Sale Value</div>
+                <div class="stat-val">Rwf <c:choose><c:when test="${not empty avgSaleValue}"><fmt:formatNumber value="${avgSaleValue}" pattern="#,##0.00"/></c:when><c:otherwise>0.00</c:otherwise></c:choose></div>
+                <div class="stat-hint">Per transaction</div>
+            </div>
+        </div>
+
+        <!-- FILTER -->
+        <form method="get" action="${pageContext.request.contextPath}/dashboard">
+            <input type="hidden" name="section" value="sales"/>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-family:'Rajdhani',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); white-space:nowrap;">From</span>
+                    <input type="date" class="field" style="width: auto; padding: 6px 10px;" name="dateFrom" value="${param.dateFrom}"/>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-family:'Rajdhani',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); white-space:nowrap;">To</span>
+                    <input type="date" class="field" style="width: auto; padding: 6px 10px;" name="dateTo" value="${param.dateTo}"/>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-family:'Rajdhani',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); white-space:nowrap;">Product</span>
+                    <div class="select-wrap">
+                        <select class="field" style="width: auto; padding: 6px 30px 6px 10px;" name="productFilter">
+                            <option value="">All Products</option>
+                            <c:forEach var="product" items="${productList}">
+                                <option value="${product.id}" <c:if test="${param.productFilter == product.id}">selected</c:if>>${product.name}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="padding: 6px 14px; font-size: 11px;"><i class="fa-solid fa-filter"></i> Apply</button>
+                <a href="${pageContext.request.contextPath}/dashboard?section=sales" class="btn-cancel" style="padding: 6px 14px; font-size: 11px; text-decoration: none;"><i class="fa-solid fa-xmark"></i> Clear</a>
+            </div>
+        </form>
+
+        <!-- TABLE -->
+        <div class="table-wrap">
+            <div class="table-hdr">
+                <span class="table-hdr-title"><i class="fa-solid fa-list" style="margin-right:6px;"></i>Sales Transactions</span>
+                <span class="table-hdr-count"><c:choose><c:when test="${not empty salesList}">${salesList.size()} record(s)</c:when><c:otherwise>0 records</c:otherwise></c:choose></span>
+            </div>
+            <c:choose>
+                <c:when test="${empty salesList}">
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fa-regular fa-clipboard"></i></div>
+                        No sales recorded yet. Click "Add New Sale" to get started.
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <table>
+                        <thead>
+                        <tr><th>#</th><th>Date</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Customer</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                        <c:forEach var="sale" items="${salesList}" varStatus="loop">
+                            <tr>
+                                <td class="td-muted">${loop.count}</td>
+                                <td class="td-muted"><fmt:formatDate value="${sale.saleDate}" pattern="dd MMM yyyy"/></td>
+                                <td class="td-green"><c:choose><c:when test="${not empty sale.saleItems}">${sale.saleItems[0].product.name}</c:when><c:otherwise>—</c:otherwise></c:choose></td>
+                                <td><c:choose><c:when test="${not empty sale.saleItems}">${sale.saleItems[0].quantity}</c:when><c:otherwise>0</c:otherwise></c:choose></td>
+                                <td><c:choose><c:when test="${not empty sale.saleItems}">Rwf <fmt:formatNumber value="${sale.saleItems[0].priceAtSale}" pattern="#,##0.00"/></c:when><c:otherwise>Rwf 0.00</c:otherwise></c:choose></td>
+                                <td class="td-green">Rwf <fmt:formatNumber value="${sale.totalAmount}" pattern="#,##0.00"/></td>
+                                <td><span class="badge badge-green">${sale.paymentMethod}</span></td>
+                                <td class="td-muted"><c:choose><c:when test="${not empty sale.customer}">${sale.customer.name}</c:when><c:otherwise>—</c:otherwise></c:choose></td>
+                                <td>
+                                    <div class="action-btns">
+                                         <button class="btn-edit" 
+                                                 data-id="${sale.id}"
+                                                 data-product-id="${not empty sale.saleItems ? sale.saleItems[0].product.id : ''}"
+                                                 data-qty="${not empty sale.saleItems ? sale.saleItems[0].quantity : ''}"
+                                                 data-price="${not empty sale.saleItems ? sale.saleItems[0].priceAtSale : ''}"
+                                                 data-payment="${sale.paymentMethod}"
+                                                 data-customer-id="${not empty sale.customer ? sale.customer.id : ''}"
+                                                 onclick="openEditSaleModalFromBtn(this)"><i class="fa-solid fa-pen"></i> Edit</button>
+                                         <button class="btn-del"  
+                                                 data-id="${sale.id}"
+                                                 data-product-name="${not empty sale.saleItems ? fn:escapeXml(sale.saleItems[0].product.name) : 'Unknown'}"
+                                                 onclick="openDeleteSaleModalFromBtn(this)"><i class="fa-solid fa-trash"></i> Delete</button>
+                                     </div>
+                                </td>
+                            </tr>
+                        </c:forEach>
+                        </tbody>
+                    </table>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+
     <!-- ══ SETTINGS ══ -->
     <div class="page-section" id="sec-settings">
         <div class="sec-header">
@@ -712,7 +915,7 @@
     <div class="modal">
         <div class="modal-hdr">
             <div><div class="modal-eyebrow">Confirm</div><div class="modal-title">Log Out</div></div>
-            <button class="modal-close" onclick="closeModal('logoutModal')">✕</button>
+            <button class="modal-close" onclick="closeModal('logoutModal')"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
             <div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div>
@@ -731,7 +934,7 @@
     <div class="modal">
         <div class="modal-hdr">
             <div><div class="modal-eyebrow">Inventory</div><div class="modal-title">Add New Product</div></div>
-            <button class="modal-close" onclick="closeModal('addProductModal')">✕</button>
+            <button class="modal-close" onclick="closeModal('addProductModal')"><i class="fas fa-times"></i></button>
         </div>
         <form action="${pageContext.request.contextPath}/products" method="post" onsubmit="return validateProductForm(this)">
             <input type="hidden" name="action" value="addProduct"/>
@@ -772,7 +975,7 @@
     <div class="modal">
         <div class="modal-hdr">
             <div><div class="modal-eyebrow">Inventory</div><div class="modal-title">Edit Product</div></div>
-            <button class="modal-close" onclick="closeModal('editProductModal')">✕</button>
+            <button class="modal-close" onclick="closeModal('editProductModal')"><i class="fas fa-times"></i></button>
         </div>
         <form action="${pageContext.request.contextPath}/products" method="post" onsubmit="return validateProductForm(this)">
             <input type="hidden" name="action" value="updateProduct"/>
@@ -814,11 +1017,11 @@
     <div class="modal">
         <div class="modal-hdr">
             <div><div class="modal-eyebrow">Confirm</div><div class="modal-title">Delete Product</div></div>
-            <button class="modal-close" onclick="closeModal('deleteProductModal')">✕</button>
+            <button class="modal-close" onclick="closeModal('deleteProductModal')"><i class="fas fa-times"></i></button>
         </div>
-        <form action="${pageContext.request.contextPath}/product" method="post">
+        <form action="${pageContext.request.contextPath}/products" method="post">
             <input type="hidden" name="action" value="deleteProduct"/>
-            <input type="hidden" name="productId" id="deleteProductId"/>
+            <input type="hidden" name="id" id="deleteProductId"/>
             <div class="modal-body">
                 <div class="confirm-icon"><i class="fas fa-trash-alt"></i></div>
                 <div class="confirm-msg">Permanently delete this product?</div>
@@ -838,7 +1041,7 @@
     <div class="modal">
         <div class="modal-hdr">
             <div><div class="modal-eyebrow">Supply Chain</div><div class="modal-title">Add Supplier</div></div>
-            <button class="modal-close" onclick="closeModal('addSupplierModal')">✕</button>
+            <button class="modal-close" onclick="closeModal('addSupplierModal')"><i class="fas fa-times"></i></button>
         </div>
         <form action="${pageContext.request.contextPath}/supplier" method="post">
             <input type="hidden" name="action" value="addSupplier"/>
@@ -870,11 +1073,11 @@
     <div class="modal">
         <div class="modal-hdr">
             <div><div class="modal-eyebrow">Supply Chain</div><div class="modal-title">Edit Supplier</div></div>
-            <button class="modal-close" onclick="closeModal('editSupplierModal')">✕</button>
+            <button class="modal-close" onclick="closeModal('editSupplierModal')"><i class="fas fa-times"></i></button>
         </div>
         <form action="${pageContext.request.contextPath}/supplier" method="post">
             <input type="hidden" name="action" value="updateSupplier"/>
-            <input type="hidden" name="supplierId" id="editSupplierId"/>
+            <input type="hidden" name="id" id="editSupplierId"/>
             <div class="modal-body">
                 <div class="field-row">
                     <div class="field"><label>Company Name</label><input type="text" name="name" id="editSupplierName" required/></div>
@@ -898,147 +1101,526 @@
 <div class="modal-overlay" id="deleteSupplierModal">
     <div class="modal">
         <div class="modal-hdr">
-            <div><div class="modal-eyebrow">Confirm</div><div class="modal-title">Delete Supplier</div></div>
-            <button class="modal-close" onclick="closeModal('deleteSupplierModal')">✕</button>
+            <div><div class="modal-eyebrow">Confirm Action</div><div class="modal-title">Delete Supplier</div></div>
+            <button class="modal-close" onclick="closeModal('deleteSupplierModal')"><i class="fas fa-times"></i></button>
         </div>
         <form action="${pageContext.request.contextPath}/supplier" method="post">
             <input type="hidden" name="action" value="deleteSupplier"/>
-            <input type="hidden" name="supplierId" id="deleteSupplierId"/>
+            <input type="hidden" name="id" id="deleteSupplierId"/>
             <div class="modal-body">
-                <div class="confirm-icon"><i class="fas fa-trash-alt"></i></div>
-                <div class="confirm-msg">Permanently delete this supplier?</div>
+                <div class="confirm-icon"><i class="fas fa-exclamation-triangle" style="color:var(--red);"></i></div>
+                <div class="confirm-msg">You are about to permanently delete this supplier.</div>
                 <div class="confirm-name" id="deleteSupplierName"></div>
+                <div class="confirm-msg">All products associated with this supplier will lose their supplier link. This action cannot be undone.</div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeModal('deleteSupplierModal')">Cancel</button>
-                <button type="submit" class="btn-danger"><i class="fas fa-check"></i> Yes, Delete</button>
+                <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Yes, Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══ ADD SALE MODAL ══ -->
+<div class="modal-overlay" id="addSaleModal">
+    <div class="modal">
+        <div class="modal-hdr">
+            <div><div class="modal-eyebrow">New Transaction</div><div class="modal-title">Add New Sale</div></div>
+            <button class="modal-close" onclick="closeModal('addSaleModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="${pageContext.request.contextPath}/sales" method="post" id="addSaleForm">
+            <input type="hidden" name="action" value="createSale"/>
+            <div class="modal-body">
+                <div class="field">
+                    <label>Product</label>
+                    <div style="position:relative;">
+                        <input type="text" id="addSearchInput" list="productsList" placeholder="Type to search products..." oninput="onProductSearchSelect(this)" autocomplete="off" required>
+                        <datalist id="productsList">
+                            <c:forEach var="product" items="${productList}">
+                                <option value="${product.name} [ID: ${product.id}]" data-id="${product.id}" data-price="${product.sellingPrice}" data-stock="${product.quantityInStock}"></option>
+                            </c:forEach>
+                        </datalist>
+                        <input type="hidden" name="productId" id="hiddenProductId" required>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Quantity</label>
+                        <input type="number" name="quantity" id="addQty" min="1" placeholder="e.g. 5" required oninput="calcTotal('add')"/>
+                        <div style="font-size:11px; color:var(--muted); margin-top:4px;" id="stockNote"></div>
+                    </div>
+                    <div class="field">
+                        <label>Unit Price (Rwf)</label>
+                        <input type="number" name="unitPrice" id="addPrice" step="0.01" min="0" placeholder="0.00" required oninput="calcTotal('add')"/>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Payment Method</label>
+                        <div class="select-wrap">
+                            <select name="paymentMethod" required>
+                                <option value="CASH">Cash</option>
+                                <option value="CARD">Card</option>
+                                <option value="MOBILE">Mobile Money</option>
+                                <option value="TRANSFER">Bank Transfer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Customer (optional)</label>
+                        <div class="select-wrap">
+                            <select name="customerId" id="addCustomerSelect" onchange="toggleNewCustomer()">
+                                <option value="">— Walk-in customer —</option>
+                                <option value="NEW" style="color:var(--green); font-weight:600;">+ Register New Customer</option>
+                                <c:forEach var="customer" items="${customerList}">
+                                    <option value="${customer.id}">${customer.name}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-row" id="newCustomerFields" style="display:none;">
+                    <div class="field"><label>New Customer Name</label><input type="text" name="newCustomerName" id="newCName"/></div>
+                    <div class="field"><label>New Customer Phone</label><input type="text" name="newCustomerPhone" id="newCPhone"/></div>
+                </div>
+                <div style="background:var(--green-glow); border:1px solid rgba(0,230,118,0.2); padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-family:'Rajdhani',sans-serif; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted);">Total Amount</span>
+                    <span style="font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; color:var(--green);" id="addTotal">Rwf 0.00</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('addSaleModal')">Cancel</button>
+                <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Sale</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ADD CUSTOMER MODAL -->
+<div class="modal-overlay" id="addCustomerModal">
+    <div class="modal">
+        <div class="modal-hdr">
+            <div><div class="modal-eyebrow">Client Base</div><div class="modal-title">Add New Customer</div></div>
+            <button class="modal-close" onclick="closeModal('addCustomerModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="${pageContext.request.contextPath}/customer" method="post">
+            <input type="hidden" name="action" value="addCustomer"/>
+            <div class="modal-body">
+                <div class="field"><label>Full Name</label><input type="text" name="name" placeholder="e.g. Jean Doe" required/></div>
+                <div class="field-row">
+                    <div class="field"><label>Phone Number</label><input type="text" name="phone" placeholder="+250 ..."/></div>
+                    <div class="field"><label>Email Address</label><input type="email" name="email" placeholder="customer@example.com"/></div>
+                </div>
+                <div class="field"><label>Physical Address</label><input type="text" name="address" placeholder="e.g. Kigali, Rwanda"/></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('addCustomerModal')">Cancel</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-check"></i> Save Customer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- EDIT CUSTOMER MODAL -->
+<div class="modal-overlay" id="editCustomerModal">
+    <div class="modal">
+        <div class="modal-hdr">
+            <div><div class="modal-eyebrow">Client Base</div><div class="modal-title">Edit Customer</div></div>
+            <button class="modal-close" onclick="closeModal('editCustomerModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="${pageContext.request.contextPath}/customer" method="post">
+            <input type="hidden" name="action" value="updateCustomer"/>
+            <input type="hidden" name="id" id="editCustomerId"/>
+            <div class="modal-body">
+                <div class="field"><label>Full Name</label><input type="text" name="name" id="editCustomerName" required/></div>
+                <div class="field-row">
+                    <div class="field"><label>Phone Number</label><input type="text" name="phone" id="editCustomerPhone"/></div>
+                    <div class="field"><label>Email Address</label><input type="email" name="email" id="editCustomerEmail"/></div>
+                </div>
+                <div class="field"><label>Physical Address</label><input type="text" name="address" id="editCustomerAddress"/></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('editCustomerModal')">Cancel</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-check"></i> Update Customer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- DELETE CUSTOMER MODAL -->
+<div class="modal-overlay" id="deleteCustomerModal">
+    <div class="modal">
+        <div class="modal-hdr">
+            <div><div class="modal-eyebrow">Confirm Action</div><div class="modal-title">Delete Customer</div></div>
+            <button class="modal-close" onclick="closeModal('deleteCustomerModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="${pageContext.request.contextPath}/customer" method="post">
+            <input type="hidden" name="action" value="deleteCustomer"/>
+            <input type="hidden" name="id" id="deleteCustomerId"/>
+            <div class="modal-body">
+                <div class="confirm-icon"><i class="fas fa-exclamation-triangle" style="color:var(--red);"></i></div>
+                <div class="confirm-msg">Are you sure you want to delete this customer?</div>
+                <div class="confirm-name" id="deleteCustomerName"></div>
+                <div class="confirm-msg">This action cannot be undone.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('deleteCustomerModal')">Cancel</button>
+                <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Yes, Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══ EDIT SALE MODAL ══ -->
+<div class="modal-overlay" id="editSaleModal">
+    <div class="modal">
+        <div class="modal-hdr">
+            <div><div class="modal-eyebrow">Update Transaction</div><div class="modal-title">Edit Sale</div></div>
+            <button class="modal-close" onclick="closeModal('editSaleModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="${pageContext.request.contextPath}/sales" method="post">
+            <input type="hidden" name="action" value="updateSale"/>
+            <input type="hidden" name="saleId" id="editSaleId"/>
+            <div class="modal-body">
+                <div class="field">
+                    <label>Product</label>
+                    <div class="select-wrap">
+                        <select name="productId" id="editProduct" required>
+                            <option value="">— Select a product —</option>
+                            <c:forEach var="product" items="${productList}">
+                                <option value="${product.id}" data-price="${product.sellingPrice}">${product.name}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field"><label>Quantity</label><input type="number" name="quantity" id="editQty" min="1" required oninput="calcTotal('edit')"/></div>
+                    <div class="field"><label>Unit Price (Rwf)</label><input type="number" name="unitPrice" id="editPrice" step="0.01" min="0" required oninput="calcTotal('edit')"/></div>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Payment Method</label>
+                        <div class="select-wrap">
+                            <select name="paymentMethod" id="editPayment">
+                                <option value="CASH">Cash</option>
+                                <option value="CARD">Card</option>
+                                <option value="MOBILE">Mobile Money</option>
+                                <option value="TRANSFER">Bank Transfer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Customer (optional)</label>
+                        <div class="select-wrap">
+                            <select name="customerId" id="editCustomer">
+                                <option value="">— Walk-in customer —</option>
+                                <c:forEach var="customer" items="${customerList}">
+                                    <option value="${customer.id}">${customer.name}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div style="background:var(--green-glow); border:1px solid rgba(0,230,118,0.2); padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-family:'Rajdhani',sans-serif; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted);">Total Amount</span>
+                    <span style="font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; color:var(--green);" id="editTotal">Rwf 0.00</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('editSaleModal')">Cancel</button>
+                <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Update Sale</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══ DELETE SALE CONFIRM MODAL ══ -->
+<div class="modal-overlay" id="deleteSaleModal">
+    <div class="modal">
+        <div class="modal-hdr">
+            <div><div class="modal-eyebrow">Confirm Action</div><div class="modal-title">Delete Sale</div></div>
+            <button class="modal-close" onclick="closeModal('deleteSaleModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="${pageContext.request.contextPath}/sales" method="post">
+            <input type="hidden" name="action" value="deleteSale"/>
+            <input type="hidden" name="saleId" id="deleteSaleId"/>
+            <div class="modal-body">
+                <div class="confirm-icon"><i class="fa-solid fa-triangle-exclamation" style="color:var(--red);font-size:38px;"></i></div>
+                <div class="confirm-msg">You are about to permanently delete this sale record.</div>
+                <div class="confirm-name" id="deleteSaleName"></div>
+                <div class="confirm-msg">This action cannot be undone. associated stock will be returned to inventory.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('deleteSaleModal')">Cancel</button>
+                <button type="submit" class="btn-danger"><i class="fa-solid fa-trash"></i> Yes, Delete</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
+    // --- Theme Control ---
     const THEME_KEY = 'sv_theme';
     function applyTheme(t) {
+        if (!t) t = 'dark';
         document.documentElement.setAttribute('data-theme', t);
         const btn = document.getElementById('themeToggle');
-        if (btn) btn.innerHTML = t === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-        localStorage.setItem(THEME_KEY, t);
-        const btnDark  = document.getElementById('btn-dark');
+        if (btn) btn.innerHTML = t === 'light' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        
+        const btnDark = document.getElementById('btn-dark');
         const btnLight = document.getElementById('btn-light');
         if (btnDark && btnLight) {
-            if (t === 'dark') {
-                btnDark.style.borderColor  = 'var(--green)'; btnDark.style.color  = 'var(--green)'; btnDark.style.background  = 'var(--green-glow)';
-                btnLight.style.borderColor = 'var(--border)'; btnLight.style.color = 'var(--muted)'; btnLight.style.background = 'transparent';
-            } else {
-                btnLight.style.borderColor = 'var(--green)'; btnLight.style.color = 'var(--green)'; btnLight.style.background = 'var(--green-glow)';
-                btnDark.style.borderColor  = 'var(--border)'; btnDark.style.color  = 'var(--muted)'; btnDark.style.background  = 'transparent';
-            }
+            btnDark.style.borderColor = t === 'dark' ? 'var(--green)' : 'var(--border)';
+            btnDark.style.color = t === 'dark' ? 'var(--text)' : 'var(--muted)';
+            btnLight.style.borderColor = t === 'light' ? 'var(--green)' : 'var(--border)';
+            btnLight.style.color = t === 'light' ? 'var(--text)' : 'var(--muted)';
         }
+        try {
+            localStorage.setItem(THEME_KEY, t);
+        } catch(e) { console.warn('localStorage not available'); }
     }
-    function toggleTheme() {
-        applyTheme((document.documentElement.getAttribute('data-theme') || 'dark') === 'dark' ? 'light' : 'dark');
+    function toggleTheme() { 
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        applyTheme(current === 'dark' ? 'light' : 'dark'); 
     }
-    applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+    function toggleSidebar() {
+        const sb = document.getElementById('sidebar');
+        if (sb) sb.classList.toggle('open');
+    }
+    // Set theme immediately to avoid flash
+    try {
+        applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+    } catch(e) {
+        applyTheme('dark');
+    }
 
-    function goBack() {
-        if (window.history.length > 1) {
-            window.history.back();
+    // --- Section Switching ---
+    function showSection(secId, navItem) {
+        console.log('Switching to section:', secId);
+        const sections = document.querySelectorAll('.page-section');
+        const items = document.querySelectorAll('.nav-item');
+        
+        sections.forEach(s => s.classList.remove('active'));
+        const target = document.getElementById('sec-' + secId);
+        if (target) {
+            target.classList.add('active');
         } else {
-            window.location.href = '/';
+            console.error('Target section not found: sec-' + secId);
         }
+        
+        items.forEach(i => i.classList.remove('active'));
+        const activeNav = navItem || document.getElementById('nav-' + secId);
+        if (activeNav) activeNav.classList.add('active');
+        
+        const titleMap = { 'dashboard':'Dashboard', 'stock':'Inventory', 'suppliers':'Suppliers', 'settings':'Settings', 'sales':'Sales', 'customers':'Customers' };
+        const titleEl = document.getElementById('topbarTitle');
+        if (titleEl) titleEl.textContent = titleMap[secId] || 'Dashboard';
+        
+        try {
+            const url = new URL(window.location);
+            url.searchParams.set('section', secId);
+            window.history.replaceState({}, '', url);
+        } catch(e) { console.warn('History API not available'); }
     }
 
-    function showSection(name, el) {
-        if (name === 'sales') return;
-        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-        document.getElementById('sec-' + name).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        if (el) el.classList.add('active');
-        const titles = { dashboard:'Dashboard', stock:'Stock Management', suppliers:'Suppliers', settings:'Settings' };
-        document.getElementById('topbarTitle').textContent = titles[name] || 'Dashboard';
-    }
+    // Modal Control
+    function openModal(id)  { document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+    document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o){o.classList.remove('open');document.body.style.overflow='';} }));
 
-    function openModal(id)  { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
-    document.querySelectorAll('.modal-overlay').forEach(o => {
-        o.addEventListener('click', e => { if (e.target === o) { o.classList.remove('open'); document.body.style.overflow = ''; } });
-    });
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => { m.classList.remove('open'); document.body.style.overflow = ''; });
-    });
-
-    function openLogoutModal() { openModal('logoutModal'); }
-
-    function openAddProductModal() { openModal('addProductModal'); }
-    function openEditProductModal(id, name, barcode, purchasePrice, sell, qty, reorder, supplierId) {
-        document.getElementById('editProductId').value       = id;
-        document.getElementById('editProductName').value     = name;
-        document.getElementById('editProductBarcode').value  = barcode;
-        document.getElementById('editCostPrice').value       = purchasePrice;
-        document.getElementById('editSellingPrice').value    = sell;
-        document.getElementById('editStockQty').value        = qty;
-        document.getElementById('editProductReorder').value  = reorder;
-        document.getElementById('editProductSupplier').value = supplierId;
-        // Optionally fetch and set description here if it starts being passed, currently omitted for safety
+    // Product Modals
+    function openAddProductModal()    { openModal('addProductModal'); }
+    function openEditProductModal(id, name, bc, cp, sp, qty, rl, sid) {
+        document.getElementById('editProductId').value = id;
+        document.getElementById('editProductName').value = name;
+        document.getElementById('editProductBarcode').value = bc;
+        document.getElementById('editCostPrice').value = cp;
+        document.getElementById('editSellingPrice').value = sp;
+        document.getElementById('editStockQty').value = qty;
+        document.getElementById('editProductReorder').value = rl;
+        document.getElementById('editProductSupplier').value = sid;
         openModal('editProductModal');
     }
     function openDeleteProductModal(id, name) {
-        document.getElementById('deleteProductId').value = id;
-        document.getElementById('deleteProductName').textContent = name;
+        const idEl = document.getElementById('deleteProductId');
+        const nameEl = document.getElementById('deleteProductName');
+        if (idEl) idEl.value = id;
+        if (nameEl) nameEl.textContent = name;
         openModal('deleteProductModal');
     }
 
-    function openAddSupplierModal() { openModal('addSupplierModal'); }
-    function openEditSupplierModal(id, name, contact, phone, email, balance) {
-        document.getElementById('editSupplierId').value      = id;
-        document.getElementById('editSupplierName').value    = name;
-        document.getElementById('editSupplierContact').value = contact;
-        document.getElementById('editSupplierPhone').value   = phone;
-        document.getElementById('editSupplierEmail').value   = email;
-        document.getElementById('editSupplierBalance').value = balance;
+    // Supplier Modals
+    function openAddSupplierModal()    { openModal('addSupplierModal'); }
+    function openEditSupplierModal(id, name, cp, ph, em, bal) {
+        document.getElementById('editSupplierId').value = id;
+        document.getElementById('editSupplierName').value = name;
+        document.getElementById('editSupplierContact').value = cp;
+        document.getElementById('editSupplierPhone').value = ph;
+        document.getElementById('editSupplierEmail').value = em;
+        document.getElementById('editSupplierBalance').value = bal;
         openModal('editSupplierModal');
     }
     function openDeleteSupplierModal(id, name) {
-        document.getElementById('deleteSupplierId').value         = id;
-        document.getElementById('deleteSupplierName').textContent = name;
+        const idEl = document.getElementById('deleteSupplierId');
+        const nameEl = document.getElementById('deleteSupplierName');
+        if (idEl) idEl.value = id;
+        if (nameEl) nameEl.textContent = name;
         openModal('deleteSupplierModal');
     }
 
-    function updateClock() {
-        const el = document.getElementById('sidebarClock');
-        if (el) el.textContent = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+    // Customer Modals
+    function openAddCustomerModal() { openModal('addCustomerModal'); }
+    function openEditCustomerModal(id, name, phone, email, address) {
+        document.getElementById('editCustomerId').value = id;
+        document.getElementById('editCustomerName').value = name;
+        document.getElementById('editCustomerPhone').value = phone;
+        document.getElementById('editCustomerEmail').value = email;
+        document.getElementById('editCustomerAddress').value = address;
+        openModal('editCustomerModal');
     }
-    updateClock(); setInterval(updateClock, 1000);
+    function openDeleteCustomerModal(id, name) {
+        const idEl = document.getElementById('deleteCustomerId');
+        const nameEl = document.getElementById('deleteCustomerName');
+        if (idEl) idEl.value = id;
+        if (nameEl) nameEl.textContent = name;
+        openModal('deleteCustomerModal');
+    }
 
-    setTimeout(() => {
-        document.querySelectorAll('.alert').forEach(el => {
-            el.style.transition = 'opacity 0.5s'; el.style.opacity = '0';
-            setTimeout(() => el.remove(), 500);
-        });
-    }, 5000);
+    function openEditCustomerModalFromBtn(btn) {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        const phone = btn.getAttribute('data-phone');
+        const email = btn.getAttribute('data-email');
+        const address = btn.getAttribute('data-address');
+        openEditCustomerModal(id, name, phone, email, address);
+    }
+    function openDeleteCustomerModalFromBtn(btn) {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        openDeleteCustomerModal(id, name);
+    }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const params = new URLSearchParams(window.location.search);
-        const success = params.get('success');
-        const error = params.get('error');
+    // Sales Modals
+    function openAddSaleModal() { openModal('addSaleModal'); }
+    function openEditSaleModal(saleId, productId, qty, price, payment, customerId) {
+        document.getElementById('editSaleId').value = saleId;
+        document.getElementById('editQty').value    = qty;
+        document.getElementById('editPrice').value  = price;
+        for(let o of document.getElementById('editProduct').options)  { if(o.value==productId)  {o.selected=true;break;} }
+        for(let o of document.getElementById('editPayment').options)  { if(o.value==payment)    {o.selected=true;break;} }
+        for(let o of document.getElementById('editCustomer').options) { if(o.value==customerId) {o.selected=true;break;} }
+        calcTotal('edit');
+        openModal('editSaleModal');
+    }
+    function openDeleteSaleModal(saleId, productName) {
+        document.getElementById('deleteSaleId').value = saleId;
+        document.getElementById('deleteSaleName').textContent = productName + ' — Sale #' + saleId;
+        openModal('deleteSaleModal');
+    }
 
-        if (success === 'productAdded' || success === 'productUpdated' || success === 'productDeleted' || success === 'addFailed' || error === 'invalidPrice' || error === 'barcodeExists') {
-            showSection('stock', document.querySelector('.nav-item[onclick*="stock"]'));
-        } else if (success === 'supplierAdded' || success === 'supplierUpdated' || success === 'supplierDeleted' || error === 'supplierEmailExists') {
-            showSection('suppliers', document.querySelector('.nav-item[onclick*="suppliers"]'));
+    function openEditSaleModalFromBtn(btn) {
+        const saleId = btn.getAttribute('data-id');
+        const productId = btn.getAttribute('data-product-id');
+        const qty = btn.getAttribute('data-qty');
+        const price = btn.getAttribute('data-price');
+        const payment = btn.getAttribute('data-payment');
+        const customerId = btn.getAttribute('data-customer-id');
+        openEditSaleModal(saleId, productId, qty, price, payment, customerId);
+    }
+    function openDeleteSaleModalFromBtn(btn) {
+        const saleId = btn.getAttribute('data-id');
+        const productName = btn.getAttribute('data-product-name');
+        openDeleteSaleModal(saleId, productName);
+    }
+
+    function onProductSearchSelect(input) {
+        let val = input.value.trim();
+        let dataList = document.getElementById('productsList');
+        if (!dataList) return;
+        let options = dataList.options;
+        let found = false;
+        
+        // Try exact match first, then try matching the "Name [ID: XX]" format
+        for (let i = 0; i < options.length; i++) {
+            let optVal = options[i].value;
+            if (optVal === val || optVal.split(' [ID:')[0] === val) {
+                const hiddenId = document.getElementById('hiddenProductId');
+                const priceInput = document.getElementById('addPrice');
+                const stockNote = document.getElementById('stockNote');
+                
+                if (hiddenId) hiddenId.value = options[i].getAttribute('data-id');
+                let price = options[i].getAttribute('data-price') || '';
+                let stock = options[i].getAttribute('data-stock') || '';
+                
+                if (priceInput) priceInput.value = price ? parseFloat(price).toFixed(2) : '';
+                if (stockNote) {
+                    stockNote.textContent = stock ? 'Available: ' + stock + ' units' : '';
+                    stockNote.style.color = (parseInt(stock) <= 5) ? 'var(--red)' : 'var(--muted)';
+                }
+                calcTotal('add');
+                found = true;
+                break;
+            }
         }
-    });
+        if (!found) {
+            const hiddenId = document.getElementById('hiddenProductId');
+            const stockNote = document.getElementById('stockNote');
+            if (hiddenId) hiddenId.value = '';
+            if (stockNote) {
+                stockNote.textContent = 'Please select a product from the list.';
+                stockNote.style.color = 'var(--red)';
+            }
+        }
+    }
+
+    function toggleNewCustomer() {
+        let sel = document.getElementById('addCustomerSelect');
+        let fields = document.getElementById('newCustomerFields');
+        if (sel.value === 'NEW') {
+            fields.style.display = 'flex';
+            document.getElementById('newCName').required = true;
+        } else {
+            fields.style.display = 'none';
+            document.getElementById('newCName').required = false;
+        }
+    }
+
+    function calcTotal(mode) {
+        const qty   = parseFloat(document.getElementById(mode+'Qty').value)   || 0;
+        const price = parseFloat(document.getElementById(mode+'Price').value) || 0;
+        document.getElementById(mode+'Total').textContent = 'Rwf ' + (qty*price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+
+    function openLogoutModal() { openModal('logoutModal'); }
 
     function validateProductForm(formObj) {
-        const purchase = parseFloat(formObj.elements['purchasePrice'].value);
-        const selling = parseFloat(formObj.elements['sellingPrice'].value);
+        const purchase = parseFloat(formObj.elements['purchasePrice'] ? formObj.elements['purchasePrice'].value : formObj.elements['editCostPrice'].value);
+        const selling = parseFloat(formObj.elements['sellingPrice'] ? formObj.elements['sellingPrice'].value : formObj.elements['editSellingPrice'].value);
         if (selling < purchase) {
             alert('Selling Price cannot be lower than Purchase Price.');
             return false;
         }
         return true;
     }
+
+    function goBack() { window.history.back(); }
+
+    function updateClock() {
+        const el = document.getElementById('sidebarClock');
+        if(el) el.textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    }
+    updateClock(); setInterval(updateClock, 1000);
+
+    // Auto-switch to section based on URL
+    window.addEventListener('load', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const section = urlParams.get('section') || 'dashboard';
+        showSection(section);
+    });
+
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(el => { el.style.transition='opacity 0.5s'; el.style.opacity='0'; setTimeout(()=>el.remove(),500); });
+    }, 5000);
 </script>
 </body>
 </html>

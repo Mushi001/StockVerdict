@@ -52,37 +52,7 @@ public class ProductServlet extends HttpServlet {
         if (action == null) action = "list";
 
         switch (action) {
-
             case "list":
-                req.setAttribute("productList", productService.getProductsByUser(loggedInUser));
-                // Inject suppliers list for dashboard dropdowns
-                req.setAttribute("supplierList", supplierService.getSuppliersByUser(loggedInUser));
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
-                break;
-
-            case "lowStock":
-                req.setAttribute("lowStockProducts", productService.getLowStockProducts(loggedInUser));
-                req.setAttribute("supplierList", supplierService.getSuppliersByUser(loggedInUser));
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
-                break;
-
-            case "search":
-                String keyword = req.getParameter("keyword");
-                if (keyword == null) keyword = "";
-                req.setAttribute("productList", productService.searchProducts(loggedInUser, keyword));
-                req.setAttribute("supplierList", supplierService.getSuppliersByUser(loggedInUser));
-                req.setAttribute("keyword", keyword);
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
-                break;
-
-            case "edit":
-                Long editId = Long.parseLong(req.getParameter("id"));
-                Products productToEdit = productService.getProductById(editId);
-                req.setAttribute("productToEdit", productToEdit);
-                req.setAttribute("supplierList", supplierService.getSuppliersByUser(loggedInUser));
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
-                break;
-
             default:
                 resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
         }
@@ -144,13 +114,13 @@ public class ProductServlet extends HttpServlet {
 
                 // Check duplicate barcode
                 if (barcode != null && !barcode.isBlank() && productService.isBarcodeExists(barcode, null)) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=barcodeExists");
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&error=barcodeExists");
                     return;
                 }
 
                 // Check price logic
                 if (sellingPrice < purchasePrice) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=invalidPrice");
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&error=invalidPrice");
                     return;
                 }
 
@@ -161,7 +131,7 @@ public class ProductServlet extends HttpServlet {
                 );
 
                 boolean success = productService.addProduct(product);
-                resp.sendRedirect(req.getContextPath() + "/products?action=list&success=" +
+                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&success=" +
                         (success ? "productAdded" : "addFailed"));
                 break;
             }
@@ -190,13 +160,13 @@ public class ProductServlet extends HttpServlet {
 
                 // Check duplicate barcode excluding this product
                 if (barcode != null && !barcode.isBlank() && productService.isBarcodeExists(barcode, id)) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=barcodeExists");
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&error=barcodeExists");
                     return;
                 }
 
                 // Check price logic
                 if (sellingPrice < purchasePrice) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=invalidPrice");
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&error=invalidPrice");
                     return;
                 }
 
@@ -212,7 +182,7 @@ public class ProductServlet extends HttpServlet {
                 updated.setSupplier(supplier);
 
                 boolean success = productService.updateProduct(updated);
-                resp.sendRedirect(req.getContextPath() + "/products?action=list&success=" +
+                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&success=" +
                         (success ? "productUpdated" : "updateFailed"));
                 break;
             }
@@ -221,7 +191,7 @@ public class ProductServlet extends HttpServlet {
                 Long id = Long.parseLong(req.getParameter("id"));
 
                 boolean success = productService.deleteProduct(id);
-                resp.sendRedirect(req.getContextPath() + "/products?action=list&success=" +
+                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&success=" +
                         (success ? "productDeleted" : "deleteFailed"));
                 break;
             }

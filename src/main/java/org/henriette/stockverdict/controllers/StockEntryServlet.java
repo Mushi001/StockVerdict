@@ -56,10 +56,7 @@ public class StockEntryServlet extends HttpServlet {
         switch (action) {
 
             case "list":
-                req.setAttribute("stockEntries", stockEntryService.getStockEntriesByUser(loggedInUser));
-                req.setAttribute("products",     productService.getProductsByUser(loggedInUser));
-                req.setAttribute("supplierList",    supplierService.getSuppliersByUser(loggedInUser));
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
+                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
                 break;
 
             case "byProduct":

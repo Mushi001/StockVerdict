@@ -48,28 +48,7 @@ public class SupplierServlet extends HttpServlet {
         if (action == null) action = "list";
 
         switch (action) {
-
             case "list":
-                req.setAttribute("supplierList", supplierService.getSuppliersByUser(loggedInUser));
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
-                break;
-
-            case "search":
-                String keyword = req.getParameter("keyword");
-                if (keyword == null) keyword = "";
-                req.setAttribute("supplierList", supplierService.searchSuppliers(loggedInUser, keyword));
-                req.setAttribute("keyword", keyword);
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
-                break;
-
-            case "edit":
-                Long editId = Long.parseLong(req.getParameter("id"));
-                Supplier supplierToEdit = supplierService.getSupplierById(editId);
-                req.setAttribute("supplierToEdit", supplierToEdit);
-                req.setAttribute("supplierList", supplierService.getSuppliersByUser(loggedInUser));
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
-                break;
-
             default:
                 resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
         }
@@ -128,7 +107,7 @@ public class SupplierServlet extends HttpServlet {
                 // Check duplicate email
                 if (email != null && !email.isBlank() && supplierService.isEmailExists(email, loggedInUser.getId(), null)) {
                     System.out.println("[Supplier] Email already exists for this user: " + email);
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=supplierEmailExists");
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=suppliers&error=supplierEmailExists");
                     return;
                 }
 
@@ -138,7 +117,7 @@ public class SupplierServlet extends HttpServlet {
                 System.out.println("[Supplier] Add success: " + success);
 
                 // Redirect with success message
-                resp.sendRedirect(req.getContextPath() + "/supplier?action=list&success=" + (success ? "supplierAdded" : "addFailed"));
+                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=suppliers&success=" + (success ? "supplierAdded" : "addFailed"));
                 break;
             }
 
@@ -163,7 +142,7 @@ public class SupplierServlet extends HttpServlet {
                 // Check duplicate email excluding this supplier
                 if (email != null && !email.isBlank() && supplierService.isEmailExists(email, loggedInUser.getId(), id)) {
                     System.out.println("[Supplier] Email already exists for this user: " + email);
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=supplierEmailExists");
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=suppliers&error=supplierEmailExists");
                     return;
                 }
 
@@ -181,7 +160,7 @@ public class SupplierServlet extends HttpServlet {
                 System.out.println("[Supplier] Update success: " + success);
 
                 // Redirect with success message
-                resp.sendRedirect(req.getContextPath() + "/supplier?action=list&success=" + (success ? "supplierUpdated" : "updateFailed"));
+                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=suppliers&success=" + (success ? "supplierUpdated" : "updateFailed"));
                 break;
             }
 
@@ -194,7 +173,7 @@ public class SupplierServlet extends HttpServlet {
                 System.out.println("[Supplier] Delete success: " + success);
 
                 // Redirect with success message
-                resp.sendRedirect(req.getContextPath() + "/supplier?action=list&success=" + (success ? "supplierDeleted" : "deleteFailed"));
+                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=suppliers&success=" + (success ? "supplierDeleted" : "deleteFailed"));
                 break;
             }
 

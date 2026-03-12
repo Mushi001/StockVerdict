@@ -87,6 +87,93 @@ public class SaleService {
     }
 
     /**
+     * Updates an existing sale transaction.
+     * Reverses the previous stock impact, updates sale details/items, and applies new stock impact.
+     * Simplification: This assumes a single-item sale as per the current UI dashboard limits.
+     *
+     * @param saleId     the ID of the sale to update
+     * @param productId  the new product ID
+     * @param quantity   the new quantity
+     * @param payment    the new payment method
+     * @param customerId the new customer ID (optional)
+     * @return true if successful, false on error or insufficient stock
+     */
+    public boolean updateSale(Long saleId, Long productId, int quantity, String payment, Long customerId) {
+        Session session = null;
+        Transaction transaction = null;
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
+            transaction = session.beginTransaction();
+
+            Sales sale = session.get(Sales.class, saleId);
+            if (sale == null) return false;
+
+            // 1. Reverse old stock
+            List<SaleItem> oldItems = getSaleItemsBySale(sale);
+            for (SaleItem item : oldItems) {
+                Products p = session.get(Products.class, item.getProduct().getId());
+                if (p != null) {
+                    p.setQuantityInStock(p.getQuantityInStock() + item.getQuantity());
+                    session.merge(p);
+                }
+            }
+
+            // 2. Validate new stock
+            Products newProduct = session.get(Products.class, productId);
+            if (newProduct == null || newProduct.getQuantityInStock() < quantity) {
+                transaction.rollback();
+                return false;
+            }
+
+            // 3. Update Sale header
+            sale.setPaymentMethod(payment);
+            if (customerId != null) {
+                sale.setCustomer(session.get(Customer.class, customerId));
+            } else {
+                sale.setCustomer(null);
+            }
+            
+            double total = quantity * newProduct.getSellingPrice();
+            sale.setTotalAmount(total);
+            session.merge(sale);
+
+            // 4. Update/Replace SaleItems (assuming single item for now)
+            // Delete old items
+            for (SaleItem item : oldItems) {
+                session.delete(item);
+            }
+            
+            // Create new item
+            SaleItem newItem = new SaleItem();
+            newItem.setSale(sale);
+            newItem.setProduct(newProduct);
+            newItem.setQuantity(quantity);
+            newItem.setPriceAtSale(newProduct.getSellingPrice());
+            newItem.setSubtotal(total);
+            session.persist(newItem);
+
+            // 5. Subtract new stock
+            newProduct.setQuantityInStock(newProduct.getQuantityInStock() - quantity);
+            newProduct.setUpdatedAt(LocalDateTime.now());
+            session.merge(newProduct);
+
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+    }
+
+    /**
      * Deletes a sale transaction.
      * Deletes the sale and all its items, and reverses the stock decrements.
      *
@@ -159,7 +246,10 @@ public class SaleService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             Query<Sales> query = session.createQuery(
-                    "FROM Sales WHERE user.id = :userId ORDER BY saleDate DESC",
+                    "SELECT DISTINCT s FROM Sales s " +
+                            "LEFT JOIN FETCH s.saleItems si " +
+                            "LEFT JOIN FETCH si.product " +
+                            "WHERE s.user.id = :userId ORDER BY s.saleDate DESC",
                     Sales.class);
             query.setParameter("userId", user.getId());
 

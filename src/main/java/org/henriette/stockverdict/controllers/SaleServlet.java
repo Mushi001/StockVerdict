@@ -59,10 +59,7 @@ public class SaleServlet extends HttpServlet {
         switch (action) {
 
             case "list":
-                req.setAttribute("sales",     saleService.getSalesByUser(loggedInUser));
-                req.setAttribute("products",  productService.getProductsByUser(loggedInUser));
-                req.setAttribute("customers", customerService.getCustomersByUser(loggedInUser));
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
+                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
                 break;
 
             case "view":
@@ -124,79 +121,101 @@ public class SaleServlet extends HttpServlet {
         switch (action) {
 
             case "createSale": {
-                // --- Customer (optional) ---
-                String customerIdParam = req.getParameter("customerId");
-                Customer customer = null;
-                if (customerIdParam != null && !customerIdParam.isBlank()) {
-                    if (customerIdParam.equals("NEW")) {
-                        String newName = req.getParameter("newCustomerName");
-                        String newPhone = req.getParameter("newCustomerPhone");
-                        if (newName != null && !newName.isBlank()) {
-                            customer = new Customer(newName, newPhone, "", "", loggedInUser);
-                            customerService.addCustomer(customer);
+                try {
+                    // --- Customer (optional) ---
+                    String customerIdParam = req.getParameter("customerId");
+                    Customer customer = null;
+                    if (customerIdParam != null && !customerIdParam.isBlank()) {
+                        if (customerIdParam.equals("NEW")) {
+                            String newName = req.getParameter("newCustomerName");
+                            String newPhone = req.getParameter("newCustomerPhone");
+                            if (newName != null && !newName.isBlank()) {
+                                customer = new Customer(newName, newPhone, "", "", loggedInUser);
+                                customerService.addCustomer(customer);
+                            }
+                        } else {
+                            customer = customerService.getCustomerById(Long.parseLong(customerIdParam));
                         }
-                    } else {
-                        customer = customerService.getCustomerById(Long.parseLong(customerIdParam));
                     }
-                }
 
-                String paymentMethod = req.getParameter("paymentMethod");
+                    String paymentMethod = req.getParameter("paymentMethod");
 
-                // --- Build sale items from parallel arrays ---
-                // Form sends: productId[], quantity[]
-                String[] productIds = req.getParameterValues("productId");
-                String[] quantities = req.getParameterValues("quantity");
+                    // --- Build sale items from parallel arrays ---
+                    String[] productIds = req.getParameterValues("productId");
+                    String[] quantities = req.getParameterValues("quantity");
 
-                if (productIds == null || productIds.length == 0) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=noItemsInSale");
-                    return;
-                }
-
-                List<SaleItem> items = new ArrayList<>();
-                for (int i = 0; i < productIds.length; i++) {
-                    Long productId = Long.parseLong(productIds[i]);
-                    int qty        = Integer.parseInt(quantities[i]);
-
-                    if (qty <= 0) continue;
-
-                    Products product = productService.getProductById(productId);
-                    if (product == null) continue;
-
-                    // Check stock before building the list
-                    if (product.getQuantityInStock() < qty) {
-                        resp.sendRedirect(req.getContextPath() +
-                                "/traderDashboard.jsp?error=insufficientStock&product=" +
-                                product.getName());
+                    if (productIds == null || productIds.length == 0 || productIds[0].isBlank()) {
+                        resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=noItems");
                         return;
                     }
 
-                    SaleItem item = new SaleItem();
-                    item.setProduct(product);
-                    item.setQuantity(qty);
-                    item.setPriceAtSale(product.getSellingPrice());
-                    item.setSubtotal(qty * product.getSellingPrice());
-                    items.add(item);
+                    List<SaleItem> items = new ArrayList<>();
+                    for (int i = 0; i < productIds.length; i++) {
+                        if (productIds[i] == null || productIds[i].isBlank()) continue;
+                        
+                        Long productId = Long.parseLong(productIds[i]);
+                        int qty        = Integer.parseInt(quantities[i]);
+
+                        if (qty <= 0) continue;
+
+                        Products product = productService.getProductById(productId);
+                        if (product == null) continue;
+
+                        // Check stock
+                        if (product.getQuantityInStock() < qty) {
+                            resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=insufficientStock&product=" + product.getName());
+                            return;
+                        }
+
+                        SaleItem item = new SaleItem();
+                        item.setProduct(product);
+                        item.setQuantity(qty);
+                        item.setPriceAtSale(product.getSellingPrice());
+                        item.setSubtotal(qty * product.getSellingPrice());
+                        items.add(item);
+                    }
+
+                    if (items.isEmpty()) {
+                        resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=noValidItems");
+                        return;
+                    }
+
+                    Sales sale = new Sales(0.0, paymentMethod, loggedInUser, customer);
+                    boolean success = saleService.createSale(sale, items);
+                    
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&success=" + (success ? "added" : "error"));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=systemError");
                 }
+                break;
+            }
 
-                if (items.isEmpty()) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=noValidItems");
-                    return;
+            case "updateSale": {
+                try {
+                    Long saleId = Long.parseLong(req.getParameter("saleId"));
+                    Long productId = Long.parseLong(req.getParameter("productId"));
+                    int quantity = Integer.parseInt(req.getParameter("quantity"));
+                    String payment = req.getParameter("paymentMethod");
+                    String customerIdParam = req.getParameter("customerId");
+                    Long customerId = (customerIdParam != null && !customerIdParam.isBlank()) ? Long.parseLong(customerIdParam) : null;
+
+                    boolean success = saleService.updateSale(saleId, productId, quantity, payment, customerId);
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&success=" + (success ? "updated" : "updateFailed"));
+                } catch (Exception e) {
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=updateError");
                 }
-
-                Sales sale = new Sales(0.0, paymentMethod, loggedInUser, customer);
-
-                boolean success = saleService.createSale(sale, items);
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?success=" +
-                        (success ? "saleCreated" : "saleFailed"));
                 break;
             }
 
             case "deleteSale": {
-                Long id = Long.parseLong(req.getParameter("id"));
-
-                boolean success = saleService.deleteSale(id);
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?success=" +
-                        (success ? "saleDeleted" : "deleteFailed"));
+                try {
+                    Long id = Long.parseLong(req.getParameter("saleId")); // FIXED: parameter name was 'id' in java but 'saleId' in jsp
+                    boolean success = saleService.deleteSale(id);
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&success=" + (success ? "deleted" : "deleteFailed"));
+                } catch (Exception e) {
+                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=deleteError");
+                }
                 break;
             }
 

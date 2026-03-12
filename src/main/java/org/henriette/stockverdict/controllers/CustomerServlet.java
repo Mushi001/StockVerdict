@@ -115,14 +115,14 @@ public class CustomerServlet extends HttpServlet {
 
                 // Check duplicate email
                 if (email != null && !email.isBlank() && customerService.isEmailExists(email, null)) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=customerEmailExists");
+                    resp.sendRedirect(req.getContextPath() + "/customer?action=list&error=customerEmailExists");
                     return;
                 }
 
                 Customer customer = new Customer(name, phone, email, address, loggedInUser);
 
                 boolean success = customerService.addCustomer(customer);
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?success=" +
+                resp.sendRedirect(req.getContextPath() + "/customer?action=list&success=" +
                         (success ? "customerAdded" : "addFailed"));
                 break;
             }
@@ -136,7 +136,7 @@ public class CustomerServlet extends HttpServlet {
 
                 // Check duplicate email excluding this customer
                 if (email != null && !email.isBlank() && customerService.isEmailExists(email, id)) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=customerEmailExists");
+                    resp.sendRedirect(req.getContextPath() + "/customer?action=list&error=customerEmailExists");
                     return;
                 }
 
@@ -148,7 +148,7 @@ public class CustomerServlet extends HttpServlet {
                 updated.setAddress(address);
 
                 boolean success = customerService.updateCustomer(updated);
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?success=" +
+                resp.sendRedirect(req.getContextPath() + "/customer?action=list&success=" +
                         (success ? "customerUpdated" : "updateFailed"));
                 break;
             }
@@ -157,7 +157,7 @@ public class CustomerServlet extends HttpServlet {
                 Long id = Long.parseLong(req.getParameter("id"));
 
                 boolean success = customerService.deleteCustomer(id);
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?success=" +
+                resp.sendRedirect(req.getContextPath() + "/customer?action=list&success=" +
                         (success ? "customerDeleted" : "deleteFailed"));
                 break;
             }
