@@ -306,7 +306,7 @@ public class UserServlet extends HttpServlet {
         if ("ADMIN".equalsIgnoreCase(user.getRole())) {
             dashboardPage = "/adminDashboard.jsp";
         } else {
-            dashboardPage = "/traderDashboard.jsp";
+            dashboardPage = "/dashboard";
         }
 
         System.out.println("[OTP] Redirecting to: " + request.getContextPath() + dashboardPage);

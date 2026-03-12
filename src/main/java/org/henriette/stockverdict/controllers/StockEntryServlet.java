@@ -56,7 +56,7 @@ public class StockEntryServlet extends HttpServlet {
         switch (action) {
 
             case "list":
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard");
                 break;
 
             case "byProduct":
@@ -66,7 +66,7 @@ public class StockEntryServlet extends HttpServlet {
                     req.setAttribute("stockEntries", stockEntryService.getStockEntriesByProduct(product));
                     req.setAttribute("filterProduct", product);
                 }
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
+                req.getRequestDispatcher("/dashboard").forward(req, resp);
                 break;
 
             case "bySupplier":
@@ -76,11 +76,11 @@ public class StockEntryServlet extends HttpServlet {
                     req.setAttribute("stockEntries", stockEntryService.getStockEntriesBySupplier(supplier));
                     req.setAttribute("filterSupplier", supplier);
                 }
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
+                req.getRequestDispatcher("/dashboard").forward(req, resp);
                 break;
 
             default:
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard");
         }
     }
 
@@ -111,7 +111,7 @@ public class StockEntryServlet extends HttpServlet {
         }
 
         if (action == null) {
-            resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+            resp.sendRedirect(req.getContextPath() + "/dashboard");
             return;
         }
 
@@ -127,19 +127,19 @@ public class StockEntryServlet extends HttpServlet {
                 Supplier supplier = supplierService.getSupplierById(supplierId);
 
                 if (product == null || supplier == null) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=invalidProductOrSupplier");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?error=invalidProductOrSupplier");
                     return;
                 }
 
                 if (quantityAdded <= 0) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?error=invalidQuantity");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?error=invalidQuantity");
                     return;
                 }
 
                 StockEntry entry = new StockEntry(quantityAdded, purchasePrice, product, supplier, loggedInUser);
 
                 boolean success = stockEntryService.addStockEntry(entry);
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?success=" +
+                resp.sendRedirect(req.getContextPath() + "/dashboard?success=" +
                         (success ? "stockAdded" : "addFailed"));
                 break;
             }
@@ -148,13 +148,13 @@ public class StockEntryServlet extends HttpServlet {
                 Long id = Long.parseLong(req.getParameter("id"));
 
                 boolean success = stockEntryService.deleteStockEntry(id);
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?success=" +
+                resp.sendRedirect(req.getContextPath() + "/dashboard?success=" +
                         (success ? "stockDeleted" : "deleteFailed"));
                 break;
             }
 
             default:
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard");
         }
     }
 }

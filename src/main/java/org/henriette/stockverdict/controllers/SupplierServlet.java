@@ -50,7 +50,7 @@ public class SupplierServlet extends HttpServlet {
         switch (action) {
             case "list":
             default:
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard");
         }
     }
 
@@ -81,7 +81,7 @@ public class SupplierServlet extends HttpServlet {
         }
 
         if (action == null) {
-            resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+            resp.sendRedirect(req.getContextPath() + "/dashboard");
             return;
         }
 
@@ -107,7 +107,7 @@ public class SupplierServlet extends HttpServlet {
                 // Check duplicate email
                 if (email != null && !email.isBlank() && supplierService.isEmailExists(email, loggedInUser.getId(), null)) {
                     System.out.println("[Supplier] Email already exists for this user: " + email);
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=suppliers&error=supplierEmailExists");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=suppliers&error=supplierEmailExists");
                     return;
                 }
 
@@ -117,7 +117,7 @@ public class SupplierServlet extends HttpServlet {
                 System.out.println("[Supplier] Add success: " + success);
 
                 // Redirect with success message
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=suppliers&success=" + (success ? "supplierAdded" : "addFailed"));
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=suppliers&success=" + (success ? "supplierAdded" : "addFailed"));
                 break;
             }
 
@@ -142,7 +142,7 @@ public class SupplierServlet extends HttpServlet {
                 // Check duplicate email excluding this supplier
                 if (email != null && !email.isBlank() && supplierService.isEmailExists(email, loggedInUser.getId(), id)) {
                     System.out.println("[Supplier] Email already exists for this user: " + email);
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=suppliers&error=supplierEmailExists");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=suppliers&error=supplierEmailExists");
                     return;
                 }
 
@@ -160,7 +160,7 @@ public class SupplierServlet extends HttpServlet {
                 System.out.println("[Supplier] Update success: " + success);
 
                 // Redirect with success message
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=suppliers&success=" + (success ? "supplierUpdated" : "updateFailed"));
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=suppliers&success=" + (success ? "supplierUpdated" : "updateFailed"));
                 break;
             }
 
@@ -173,12 +173,12 @@ public class SupplierServlet extends HttpServlet {
                 System.out.println("[Supplier] Delete success: " + success);
 
                 // Redirect with success message
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=suppliers&success=" + (success ? "supplierDeleted" : "deleteFailed"));
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=suppliers&success=" + (success ? "supplierDeleted" : "deleteFailed"));
                 break;
             }
 
             default:
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard");
         }
     }
 }

@@ -500,7 +500,7 @@
                         <tbody>
                         <c:forEach var="s" items="${recentSales}">
                             <tr>
-                                <td class="td-muted"><fmt:formatDate value="${s.saleDate}" pattern="dd MMM yyyy"/></td>
+                                <td class="td-muted">${s.saleDate.toLocalDate()}</td>
                                 <td class="td-green"><c:choose><c:when test="${not empty s.saleItems}">${s.saleItems[0].product.name}</c:when><c:otherwise>—</c:otherwise></c:choose></td>
                                 <td>Rwf <fmt:formatNumber value="${s.totalAmount}" pattern="#,##0"/></td>
                                 <td><span class="badge badge-green">Completed</span></td>
@@ -709,7 +709,7 @@
                                 <td class="td-muted">${cust.phone}</td>
                                 <td class="td-muted">${cust.email}</td>
                                 <td class="td-muted">${cust.address}</td>
-                                <td class="td-muted"><fmt:formatDate value="${cust.createdAt}" pattern="dd MMM yyyy"/></td>
+                                <td class="td-muted">${cust.createdAt.toLocalDate()}</td>
                                 <td>
                                     <div class="action-btns">
                                         <button class="btn-edit" 
@@ -821,7 +821,7 @@
                         <c:forEach var="sale" items="${salesList}" varStatus="loop">
                             <tr>
                                 <td class="td-muted">${loop.count}</td>
-                                <td class="td-muted"><fmt:formatDate value="${sale.saleDate}" pattern="dd MMM yyyy"/></td>
+                                <td class="td-muted">${sale.saleDate.toLocalDate()}</td>
                                 <td class="td-green"><c:choose><c:when test="${not empty sale.saleItems}">${sale.saleItems[0].product.name}</c:when><c:otherwise>—</c:otherwise></c:choose></td>
                                 <td><c:choose><c:when test="${not empty sale.saleItems}">${sale.saleItems[0].quantity}</c:when><c:otherwise>0</c:otherwise></c:choose></td>
                                 <td><c:choose><c:when test="${not empty sale.saleItems}">Rwf <fmt:formatNumber value="${sale.saleItems[0].priceAtSale}" pattern="#,##0.00"/></c:when><c:otherwise>Rwf 0.00</c:otherwise></c:choose></td>

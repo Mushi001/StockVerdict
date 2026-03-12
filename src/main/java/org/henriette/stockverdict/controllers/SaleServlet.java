@@ -59,7 +59,7 @@ public class SaleServlet extends HttpServlet {
         switch (action) {
 
             case "list":
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard");
                 break;
 
             case "view":
@@ -69,7 +69,7 @@ public class SaleServlet extends HttpServlet {
                     req.setAttribute("sale",      sale);
                     req.setAttribute("saleItems", saleService.getSaleItemsBySale(sale));
                 }
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
+                req.getRequestDispatcher("/dashboard").forward(req, resp);
                 break;
 
             case "byCustomer":
@@ -79,11 +79,11 @@ public class SaleServlet extends HttpServlet {
                     req.setAttribute("sales",          saleService.getSalesByCustomer(customer));
                     req.setAttribute("filterCustomer", customer);
                 }
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
+                req.getRequestDispatcher("/dashboard").forward(req, resp);
                 break;
 
             default:
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard");
         }
     }
 
@@ -114,7 +114,7 @@ public class SaleServlet extends HttpServlet {
         }
 
         if (action == null) {
-            resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+            resp.sendRedirect(req.getContextPath() + "/dashboard");
             return;
         }
 
@@ -145,7 +145,7 @@ public class SaleServlet extends HttpServlet {
                     String[] quantities = req.getParameterValues("quantity");
 
                     if (productIds == null || productIds.length == 0 || productIds[0].isBlank()) {
-                        resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=noItems");
+                        resp.sendRedirect(req.getContextPath() + "/dashboard?section=sales&error=noItems");
                         return;
                     }
 
@@ -163,7 +163,7 @@ public class SaleServlet extends HttpServlet {
 
                         // Check stock
                         if (product.getQuantityInStock() < qty) {
-                            resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=insufficientStock&product=" + product.getName());
+                            resp.sendRedirect(req.getContextPath() + "/dashboard?section=sales&error=insufficientStock&product=" + product.getName());
                             return;
                         }
 
@@ -176,17 +176,17 @@ public class SaleServlet extends HttpServlet {
                     }
 
                     if (items.isEmpty()) {
-                        resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=noValidItems");
+                        resp.sendRedirect(req.getContextPath() + "/dashboard?section=sales&error=noValidItems");
                         return;
                     }
 
                     Sales sale = new Sales(0.0, paymentMethod, loggedInUser, customer);
                     boolean success = saleService.createSale(sale, items);
                     
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&success=" + (success ? "added" : "error"));
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=sales&success=" + (success ? "added" : "error"));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=systemError");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=sales&error=systemError");
                 }
                 break;
             }
@@ -201,9 +201,9 @@ public class SaleServlet extends HttpServlet {
                     Long customerId = (customerIdParam != null && !customerIdParam.isBlank()) ? Long.parseLong(customerIdParam) : null;
 
                     boolean success = saleService.updateSale(saleId, productId, quantity, payment, customerId);
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&success=" + (success ? "updated" : "updateFailed"));
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=sales&success=" + (success ? "updated" : "updateFailed"));
                 } catch (Exception e) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=updateError");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=sales&error=updateError");
                 }
                 break;
             }
@@ -212,15 +212,15 @@ public class SaleServlet extends HttpServlet {
                 try {
                     Long id = Long.parseLong(req.getParameter("saleId")); // FIXED: parameter name was 'id' in java but 'saleId' in jsp
                     boolean success = saleService.deleteSale(id);
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&success=" + (success ? "deleted" : "deleteFailed"));
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=sales&success=" + (success ? "deleted" : "deleteFailed"));
                 } catch (Exception e) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=sales&error=deleteError");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=sales&error=deleteError");
                 }
                 break;
             }
 
             default:
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard");
         }
     }
 }

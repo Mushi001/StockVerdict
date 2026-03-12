@@ -54,7 +54,7 @@ public class ProductServlet extends HttpServlet {
         switch (action) {
             case "list":
             default:
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard");
         }
     }
 
@@ -85,7 +85,7 @@ public class ProductServlet extends HttpServlet {
         }
 
         if (action == null) {
-            resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+            resp.sendRedirect(req.getContextPath() + "/dashboard");
             return;
         }
 
@@ -114,13 +114,13 @@ public class ProductServlet extends HttpServlet {
 
                 // Check duplicate barcode
                 if (barcode != null && !barcode.isBlank() && productService.isBarcodeExists(barcode, null)) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&error=barcodeExists");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=stock&error=barcodeExists");
                     return;
                 }
 
                 // Check price logic
                 if (sellingPrice < purchasePrice) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&error=invalidPrice");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=stock&error=invalidPrice");
                     return;
                 }
 
@@ -131,7 +131,7 @@ public class ProductServlet extends HttpServlet {
                 );
 
                 boolean success = productService.addProduct(product);
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&success=" +
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=stock&success=" +
                         (success ? "productAdded" : "addFailed"));
                 break;
             }
@@ -160,13 +160,13 @@ public class ProductServlet extends HttpServlet {
 
                 // Check duplicate barcode excluding this product
                 if (barcode != null && !barcode.isBlank() && productService.isBarcodeExists(barcode, id)) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&error=barcodeExists");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=stock&error=barcodeExists");
                     return;
                 }
 
                 // Check price logic
                 if (sellingPrice < purchasePrice) {
-                    resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&error=invalidPrice");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=stock&error=invalidPrice");
                     return;
                 }
 
@@ -182,7 +182,7 @@ public class ProductServlet extends HttpServlet {
                 updated.setSupplier(supplier);
 
                 boolean success = productService.updateProduct(updated);
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&success=" +
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=stock&success=" +
                         (success ? "productUpdated" : "updateFailed"));
                 break;
             }
@@ -191,13 +191,13 @@ public class ProductServlet extends HttpServlet {
                 Long id = Long.parseLong(req.getParameter("id"));
 
                 boolean success = productService.deleteProduct(id);
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp?section=stock&success=" +
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=stock&success=" +
                         (success ? "productDeleted" : "deleteFailed"));
                 break;
             }
 
             default:
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard");
         }
     }
 }

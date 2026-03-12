@@ -50,27 +50,10 @@ public class CustomerServlet extends HttpServlet {
         switch (action) {
 
             case "list":
-                req.setAttribute("customers", customerService.getCustomersByUser(loggedInUser));
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
-                break;
-
             case "search":
-                String keyword = req.getParameter("keyword");
-                if (keyword == null) keyword = "";
-                req.setAttribute("customers", customerService.searchCustomers(loggedInUser, keyword));
-                req.setAttribute("keyword", keyword);
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
-                break;
-
             case "edit":
-                Long editId = Long.parseLong(req.getParameter("id"));
-                Customer customerToEdit = customerService.getCustomerById(editId);
-                req.setAttribute("customerToEdit", customerToEdit);
-                req.getRequestDispatcher("/traderDashboard.jsp").forward(req, resp);
-                break;
-
             default:
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=customers");
         }
     }
 
@@ -101,7 +84,7 @@ public class CustomerServlet extends HttpServlet {
         }
 
         if (action == null) {
-            resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+            resp.sendRedirect(req.getContextPath() + "/dashboard?section=customers");
             return;
         }
 
@@ -115,14 +98,14 @@ public class CustomerServlet extends HttpServlet {
 
                 // Check duplicate email
                 if (email != null && !email.isBlank() && customerService.isEmailExists(email, null)) {
-                    resp.sendRedirect(req.getContextPath() + "/customer?action=list&error=customerEmailExists");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=customers&error=customerEmailExists");
                     return;
                 }
 
                 Customer customer = new Customer(name, phone, email, address, loggedInUser);
 
                 boolean success = customerService.addCustomer(customer);
-                resp.sendRedirect(req.getContextPath() + "/customer?action=list&success=" +
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=customers&success=" +
                         (success ? "customerAdded" : "addFailed"));
                 break;
             }
@@ -136,7 +119,7 @@ public class CustomerServlet extends HttpServlet {
 
                 // Check duplicate email excluding this customer
                 if (email != null && !email.isBlank() && customerService.isEmailExists(email, id)) {
-                    resp.sendRedirect(req.getContextPath() + "/customer?action=list&error=customerEmailExists");
+                    resp.sendRedirect(req.getContextPath() + "/dashboard?section=customers&error=customerEmailExists");
                     return;
                 }
 
@@ -148,7 +131,7 @@ public class CustomerServlet extends HttpServlet {
                 updated.setAddress(address);
 
                 boolean success = customerService.updateCustomer(updated);
-                resp.sendRedirect(req.getContextPath() + "/customer?action=list&success=" +
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=customers&success=" +
                         (success ? "customerUpdated" : "updateFailed"));
                 break;
             }
@@ -157,13 +140,13 @@ public class CustomerServlet extends HttpServlet {
                 Long id = Long.parseLong(req.getParameter("id"));
 
                 boolean success = customerService.deleteCustomer(id);
-                resp.sendRedirect(req.getContextPath() + "/customer?action=list&success=" +
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=customers&success=" +
                         (success ? "customerDeleted" : "deleteFailed"));
                 break;
             }
 
             default:
-                resp.sendRedirect(req.getContextPath() + "/traderDashboard.jsp");
+                resp.sendRedirect(req.getContextPath() + "/dashboard?section=customers");
         }
     }
 }
