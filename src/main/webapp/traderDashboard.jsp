@@ -364,7 +364,7 @@
 
     <nav class="sidebar-nav">
         <div class="nav-section-label">Navigation</div>
-        <a href="/" class="nav-item">
+        <a href="${pageContext.request.contextPath}/index.jsp" class="nav-item">
             <span class="nav-icon"><i class="fas fa-home"></i></span> Home
         </a>
         <a id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard', this)">
@@ -1137,7 +1137,7 @@
                         <input type="text" id="addSearchInput" list="productsList" placeholder="Type to search products..." oninput="onProductSearchSelect(this)" autocomplete="off" required>
                         <datalist id="productsList">
                             <c:forEach var="product" items="${productList}">
-                                <option value="${product.name} [ID: ${product.id}]" data-id="${product.id}" data-price="${product.sellingPrice}" data-stock="${product.quantityInStock}"></option>
+                                <option value="${product.name}" data-id="${product.id}" data-price="${product.sellingPrice}" data-stock="${product.quantityInStock}"></option>
                             </c:forEach>
                         </datalist>
                         <input type="hidden" name="productId" id="hiddenProductId" required>

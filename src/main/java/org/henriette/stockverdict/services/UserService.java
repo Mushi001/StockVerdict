@@ -414,6 +414,49 @@ public class UserService {
     }
 
     /**
+     * Changes a user's password securely by verifying the current password first.
+     *
+     * @param userId          the user ID
+     * @param currentPassword the plain text current password
+     * @param newPassword     the plain text new password
+     * @return true if updated, false if current password is wrong or user not found
+     */
+    public boolean changePassword(Long userId, String currentPassword, String newPassword) {
+        Session session = null;
+        Transaction transaction = null;
+
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
+            transaction = session.beginTransaction();
+
+            Users user = session.get(Users.class, userId);
+            if (user == null) return false;
+
+            if (!checkPassword(currentPassword, user.getPassword())) {
+                return false;
+            }
+
+            user.setPassword(hashPassword(newPassword));
+            user.setUpdatedAt(LocalDateTime.now());
+
+            session.merge(user);
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+    }
+
+    /**
      * Deletes a user by their unique ID.
      *
      * @param userId the ID to remove from tracking

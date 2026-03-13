@@ -77,6 +77,8 @@ public class UserServlet extends HttpServlet {
             handleVerifyOtp(request, response);
         } else if ("update".equals(action)) {
             handleUpdate(request, response);
+        } else if ("changePassword".equals(action)) {
+            handleChangePassword(request, response);
         }
     }
 
@@ -344,6 +346,36 @@ public class UserServlet extends HttpServlet {
             request.setAttribute("error", "Update failed");
         }
         request.getRequestDispatcher("/profile.jsp").forward(request, response);
+    }
+
+    /**
+     * Processes a password change request from the authenticated user.
+     */
+    private void handleChangePassword(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String currentPassword = request.getParameter("currentPassword");
+        String newPassword = request.getParameter("newPassword");
+        String confirmPassword = request.getParameter("confirmPassword");
+
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("currentUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
+
+        Users currentUser = (Users) session.getAttribute("currentUser");
+
+        if (newPassword == null || !newPassword.equals(confirmPassword)) {
+            request.setAttribute("error", "Passwords do not match");
+            request.getRequestDispatcher("/traderDashboard.jsp?section=settings").forward(request, response);
+            return;
+        }
+
+        if (userService.changePassword(currentUser.getId(), currentPassword, newPassword)) {
+            response.sendRedirect(request.getContextPath() + "/traderDashboard.jsp?section=settings&success=password_changed");
+        } else {
+            request.setAttribute("error", "Invalid current password");
+            request.getRequestDispatcher("/traderDashboard.jsp?section=settings").forward(request, response);
+        }
     }
 
     /**

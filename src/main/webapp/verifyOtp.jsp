@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StockVerdict — Verify OTP</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/brightness.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/moon.css"/>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
@@ -31,6 +33,10 @@
             --surface:    rgba(220,245,225,0.7);
             --green:      #00a84a;
             --green-dim:  #007a35;
+        }
+        [data-theme="light"] .icon-park-twotone--brightness,
+        [data-theme="light"] .stash--moon {
+            filter: invert(1) brightness(0.3) sepia(1) hue-rotate(90deg) saturate(4);
         }
         body {
             min-height: 100vh;
@@ -215,15 +221,17 @@
 </div>
 
 <div style="position: fixed; top: 15px; right: 20px; z-index: 500;">
-    <button id="themeToggle" onclick="toggleTheme()" style="width: 36px; height: 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">🌙</button>
+    <button class="btn-theme" id="themeToggle" onclick="toggleTheme()" style="width: 36px; height: 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+        <span id="themeIcon" class="icon-park-twotone--brightness" style="width: 18px; height: 18px;"></span>
+    </button>
 </div>
 
 <script>
     const THEME_KEY = 'sv_theme';
     function applyTheme(t) {
         document.documentElement.setAttribute('data-theme', t);
-        const btn = document.getElementById('themeToggle');
-        if (btn) btn.textContent = t === 'light' ? '🌙' : '☀️';
+        const icon = document.getElementById('themeIcon');
+        if (icon) icon.className = t === 'light' ? 'stash--moon' : 'icon-park-twotone--brightness';
         localStorage.setItem(THEME_KEY, t);
         
         // Hide/Show background elements based on theme
