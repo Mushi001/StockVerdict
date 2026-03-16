@@ -8,9 +8,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.UUID;
+import java.nio.file.Paths;
 
 /**
  * Servlet handling HTTP requests for User authentication and management.
@@ -18,6 +21,11 @@ import java.util.Properties;
  * Validates Google reCAPTCHA during registration.
  */
 @WebServlet(name = "UserServlet", value = "/user")
+@jakarta.servlet.annotation.MultipartConfig(
+        fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
+        maxFileSize = 1024 * 1024 * 10,      // 10 MB
+        maxRequestSize = 1024 * 1024 * 15    // 15 MB
+)
 public class UserServlet extends HttpServlet {
 
     private UserService userService = new UserService();
@@ -79,6 +87,8 @@ public class UserServlet extends HttpServlet {
             handleUpdate(request, response);
         } else if ("changePassword".equals(action)) {
             handleChangePassword(request, response);
+        } else if ("updateProfile".equals(action)) {
+            handleUpdateProfile(request, response);
         }
     }
 
@@ -346,6 +356,60 @@ public class UserServlet extends HttpServlet {
             request.setAttribute("error", "Update failed");
         }
         request.getRequestDispatcher("/profile.jsp").forward(request, response);
+    }
+
+    /**
+     * Processes a profile and payment details update request, including profile picture upload.
+     */
+    private void handleUpdateProfile(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String name = request.getParameter("name");
+        String businessName = request.getParameter("businessName");
+        String momoCode = request.getParameter("momoCode");
+        String bankAccountNumber = request.getParameter("bankAccountNumber");
+        
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("currentUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
+
+        Users currentUser = (Users) session.getAttribute("currentUser");
+        String profileImageUrl = null;
+
+        // Process file upload
+        try {
+            Part filePart = request.getPart("profileImage");
+            if (filePart != null && filePart.getSize() > 0) {
+                String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String ext = fileName.substring(fileName.lastIndexOf("."));
+                String uniqueName = UUID.randomUUID().toString() + ext;
+                
+                String uploadPath = getServletContext().getRealPath("") + File.separator + "assets" + File.separator + "profiles";
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) uploadDir.mkdirs();
+                
+                filePart.write(uploadPath + File.separator + uniqueName);
+                profileImageUrl = "assets/profiles/" + uniqueName;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Not fatal if file upload fails, continue with text fields
+        }
+
+        if (userService.updateProfileDetails(currentUser.getId(), name, businessName, momoCode, bankAccountNumber, profileImageUrl)) {
+            // Update session object
+            currentUser.setName(name);
+            currentUser.setBusinessName(businessName);
+            currentUser.setMomoCode(momoCode);
+            currentUser.setBankAccountNumber(bankAccountNumber);
+            if (profileImageUrl != null) currentUser.setProfileImageUrl(profileImageUrl);
+            session.setAttribute("currentUser", currentUser);
+            
+            response.sendRedirect(request.getContextPath() + "/traderDashboard.jsp?section=settings&success=profile_updated");
+        } else {
+            request.setAttribute("error", "Failed to update profile details");
+            request.getRequestDispatcher("/traderDashboard.jsp?section=settings").forward(request, response);
+        }
     }
 
     /**

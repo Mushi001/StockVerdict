@@ -22,6 +22,21 @@ public class HibernateUtil {
             Configuration configuration = new Configuration();
             configuration.configure("hibernate.cfg.xml"); // Load settings from hibernate.cfg.xml
 
+            // ======= Environment Variable Overrides =======
+            String dbUrl = System.getenv("DB_URL");
+            String dbUser = System.getenv("DB_USER");
+            String dbPassword = System.getenv("DB_PASSWORD");
+
+            if (dbUrl != null) {
+                configuration.setProperty("hibernate.connection.url", dbUrl);
+            }
+            if (dbUser != null) {
+                configuration.setProperty("hibernate.connection.username", dbUser);
+            }
+            if (dbPassword != null) {
+                configuration.setProperty("hibernate.connection.password", dbPassword);
+            }
+
             // ======= Register all annotated entity classes =======
             configuration.addAnnotatedClass(Users.class);
             configuration.addAnnotatedClass(Customer.class);

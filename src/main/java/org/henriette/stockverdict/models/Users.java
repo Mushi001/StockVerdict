@@ -59,6 +59,18 @@ public class Users implements Serializable {
         @Column(name = "updated_at")
         private LocalDateTime updatedAt;
 
+        @Column(name = "business_name")
+        private String businessName;
+
+        @Column(name = "momo_code")
+        private String momoCode;
+
+        @Column(name = "bank_account_number")
+        private String bankAccountNumber;
+
+        @Column(name = "profile_image_url")
+        private String profileImageUrl;
+
         // Constructors
         /**
          * Default constructor.
@@ -107,6 +119,18 @@ public class Users implements Serializable {
 
         public LocalDateTime getUpdatedAt() { return updatedAt; }
         public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+        public String getBusinessName() { return businessName; }
+        public void setBusinessName(String businessName) { this.businessName = businessName; }
+
+        public String getMomoCode() { return momoCode; }
+        public void setMomoCode(String momoCode) { this.momoCode = momoCode; }
+
+        public String getBankAccountNumber() { return bankAccountNumber; }
+        public void setBankAccountNumber(String bankAccountNumber) { this.bankAccountNumber = bankAccountNumber; }
+
+        public String getProfileImageUrl() { return profileImageUrl; }
+        public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
     }
 
 

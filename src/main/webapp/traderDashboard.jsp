@@ -348,6 +348,28 @@
             .cta-buttons { flex-direction: column; }
             .cta-buttons .btn-primary { width: 100%; }
         }
+
+        /* ── PRINT STYLES ── */
+        @media print {
+            body { background: #fff !important; color: #000 !important; }
+            .sidebar, .topbar, .btn-theme, .btn-primary, .stats-grid, .table-wrap, .sec-header, .alert { display: none !important; }
+            .main-content { margin: 0 !important; padding: 0 !important; }
+            .page-section { display: none !important; padding: 0 !important; }
+            #sec-settings { display: block !important; }
+            .settings-grid > div:not(#qr-code-print-view) { display: none !important; }
+            #qr-code-print-view { 
+                display: flex !important; flex-direction: column !important; 
+                align-items: center !important; justify-content: center !important;
+                height: 100vh !important; width: 100vw !important; 
+                border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important;
+                background: white !important;
+            }
+            #qr-code-print-view img { width: 400px !important; height: 400px !important; border: 4px solid #00e676 !important; padding: 20px !important; margin-bottom: 30px !important; }
+            .print-title { font-size: 32px !important; color: #000 !important; font-family: 'Rajdhani', sans-serif !important; font-weight: 700 !important; }
+            .print-subtitle { font-size: 24px !important; color: #555 !important; }
+            .btn-print { display: none !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
     </style>
 </head>
 <body>
@@ -863,7 +885,7 @@
             </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;max-width:800px;">
+        <div class="settings-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;max-width:1000px;">
             <div class="table-wrap" style="padding:22px;">
                 <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--text);letter-spacing:0.06em;margin-bottom:16px;text-transform:uppercase;"><i class="fas fa-palette"></i> Appearance</div>
                 <div style="display:flex;gap:10px;margin-top:6px;">
@@ -872,14 +894,51 @@
                 </div>
             </div>
 
-            <div class="table-wrap" style="padding:22px;">
-                <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--text);letter-spacing:0.06em;margin-bottom:16px;text-transform:uppercase;"><i class="fas fa-user-circle"></i> Profile</div>
-                <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Name</div>
-                <div style="font-size:14px;color:var(--text);font-weight:500;margin-bottom:12px;">${sessionScope.currentUser.name}</div>
-                <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Email</div>
-                <div style="font-size:14px;color:var(--green);margin-bottom:12px;">${sessionScope.currentUser.email}</div>
-                <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Role</div>
-                <span class="badge badge-green">${sessionScope.currentUser.role}</span>
+            <div class="table-wrap" style="padding:22px; grid-row: span 2;">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--text);letter-spacing:0.06em;margin-bottom:16px;text-transform:uppercase;"><i class="fas fa-user-circle"></i> Profile & Payment Info</div>
+                <form action="${pageContext.request.contextPath}/user" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:14px;">
+                    <input type="hidden" name="action" value="updateProfile"/>
+                    
+                    <div class="field" style="margin:0;"><label>Profile Picture</label><input type="file" name="profileImage" accept="image/*" style="width:100%; border:1px dashed var(--border); padding:10px; opacity:0.8;"/></div>
+
+                    <div class="field" style="margin:0;"><label>Full Name</label><input type="text" name="name" value="${sessionScope.currentUser.name}" required/></div>
+                    
+                    <div class="field" style="margin:0;"><label>Email (Read-only)</label><input type="email" value="${sessionScope.currentUser.email}" readonly style="opacity:0.6; cursor:not-allowed; border-color:transparent; background:rgba(0,0,0,0.2);"/></div>
+                    
+                    <div class="field" style="margin:0;"><label>Business / Company Name</label><input type="text" name="businessName" value="${sessionScope.currentUser.businessName}" placeholder="e.g. Acme Retailers"/></div>
+                    
+                    <div class="field" style="margin:0;"><label>MoMo Number</label><input type="tel" name="momoCode" value="${sessionScope.currentUser.momoCode}" placeholder="e.g. 0780000000"/></div>
+                    
+                    <div class="field" style="margin:0;"><label>Bank Account Number</label><input type="text" name="bankAccountNumber" value="${sessionScope.currentUser.bankAccountNumber}" placeholder="e.g. 123456789 (BK)"/></div>
+                    
+                    <div style="margin-top:8px;"><button type="submit" class="btn-primary" style="width:100%;"><i class="fas fa-save"></i> Save Profile</button></div>
+                </form>
+            </div>
+
+            <div class="table-wrap" id="qr-code-print-view" style="padding:22px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--text);letter-spacing:0.06em;margin-bottom:16px;text-transform:uppercase;width:100%;text-align:left;"><i class="fas fa-qrcode"></i> Receive Payment</div>
+                <c:choose>
+                    <c:when test="${not empty sessionScope.currentUser.businessName || not empty sessionScope.currentUser.momoCode}">
+                        <div class="print-title" style="display:none; margin-bottom:10px;">StockVerdict Secure Payment</div>
+                        <img id="paymentQrImage" src="" alt="Payment QR Code" style="border-radius:6px; border:2px solid var(--green); padding:8px; background:#fff; width:160px; height:160px; display:none; margin:0 auto;"/>
+                        <div class="print-subtitle" style="margin-top:16px; font-size:13px; color:var(--text); line-height:1.4;">Scan to pay <b style="color:var(--green);">${not empty sessionScope.currentUser.businessName ? sessionScope.currentUser.businessName : sessionScope.currentUser.name}</b></div>
+                        <button class="btn-primary btn-print" type="button" onclick="window.print()" style="margin-top:20px;"><i class="fas fa-print"></i> Print QR Code</button>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                var qrImg = document.getElementById('paymentQrImage');
+                                var payUrl = window.location.origin + '${pageContext.request.contextPath}/pay?traderId=${sessionScope.currentUser.id}';
+                                qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(payUrl);
+                                qrImg.style.display = 'block';
+                            });
+                        </script>
+                    </c:when>
+                    <c:otherwise>
+                        <div style="color:var(--amber); font-size:12px; padding:10px 0; line-height:1.5;">
+                            <i class="fas fa-exclamation-triangle" style="font-size:24px; margin-bottom:10px; display:block;"></i>
+                            Set Business Name & MoMo to generate your Printable QR Code.
+                        </div>
+                    </c:otherwise>
+                </c:choose>
             </div>
 
             <div class="table-wrap" style="padding:22px;grid-column:1/-1;">
@@ -894,7 +953,6 @@
             </div>
 
             <div class="table-wrap" style="padding:22px;border-color:rgba(255,82,82,0.2);grid-column:1/-1;">
-                <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--red);letter-spacing:0.06em;margin-bottom:16px;text-transform:uppercase;"><i class="fas fa-exclamation-triangle"></i> Danger Zone</div>
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
                     <div>
                         <div style="font-size:14px;color:var(--text);font-weight:500;margin-bottom:4px;">Log Out of StockVerdict</div>

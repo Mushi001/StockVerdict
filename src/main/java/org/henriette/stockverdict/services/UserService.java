@@ -414,6 +414,68 @@ public class UserService {
     }
 
     /**
+     * Updates profile details securely without touching the password.
+     */
+    public boolean updateProfileDetails(Long userId, String name, String businessName, String momoCode, String bankAccountNumber, String profileImageUrl) {
+        Session session = null;
+        Transaction transaction = null;
+
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
+            transaction = session.beginTransaction();
+
+            Users existingUser = session.get(Users.class, userId);
+            if (existingUser == null) return false;
+
+            existingUser.setName(name);
+            existingUser.setBusinessName(businessName);
+            existingUser.setMomoCode(momoCode);
+            existingUser.setBankAccountNumber(bankAccountNumber);
+            if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
+                existingUser.setProfileImageUrl(profileImageUrl);
+            }
+            existingUser.setUpdatedAt(LocalDateTime.now());
+
+            session.merge(existingUser);
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+    }
+
+    /**
+     * Retrieves safe payment info for a specific trader.
+     */
+    public Users getTraderPaymentInfo(Long id) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Users user = session.get(Users.class, id);
+            if (user != null && "TRADER".equalsIgnoreCase(user.getRole())) {
+                Users safeUser = new Users();
+                safeUser.setName(user.getName());
+                safeUser.setEmail(user.getEmail());
+                safeUser.setBusinessName(user.getBusinessName());
+                safeUser.setMomoCode(user.getMomoCode());
+                safeUser.setBankAccountNumber(user.getBankAccountNumber());
+                safeUser.setProfileImageUrl(user.getProfileImageUrl());
+                return safeUser;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * Changes a user's password securely by verifying the current password first.
      *
      * @param userId          the user ID
