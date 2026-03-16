@@ -370,7 +370,7 @@
 
     <div class="sidebar-footer">
         <div class="admin-tag">Logged in as <span>Admin</span></div>
-        <a href="${pageContext.request.contextPath}/logout" style="font-size:11px;color:var(--red);text-decoration:none;">Logout</a>
+        <a href="${pageContext.request.contextPath}/user?action=logout" style="font-size:11px;color:var(--red);text-decoration:none;">Logout</a>
     </div>
 </aside>
 

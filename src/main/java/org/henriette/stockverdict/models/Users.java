@@ -71,6 +71,9 @@ public class Users implements Serializable {
         @Column(name = "profile_image_url")
         private String profileImageUrl;
 
+        @Column(nullable = true)
+        private String status = "PENDING"; // State: PENDING, ACTIVE, INACTIVE
+
         // Constructors
         /**
          * Default constructor.
@@ -79,6 +82,7 @@ public class Users implements Serializable {
         public Users() {
             this.createdAt = LocalDateTime.now();
             this.updatedAt = LocalDateTime.now();
+            this.status = "PENDING";
         }
 
         /**
@@ -94,6 +98,7 @@ public class Users implements Serializable {
             this.email = email;
             this.password = password;
             this.role = role;
+            this.status = "PENDING";
             this.createdAt = LocalDateTime.now();
             this.updatedAt = LocalDateTime.now();
         }
@@ -113,6 +118,9 @@ public class Users implements Serializable {
 
         public String getRole() { return role; }
         public void setRole(String role) { this.role = role; }
+
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
 
         public LocalDateTime getCreatedAt() { return createdAt; }
         public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -9,7 +9,7 @@
 ################################################################################
 
 # Create a stage for resolving and downloading dependencies.
-FROM eclipse-temurin:24-jdk-jammy as deps
+FROM eclipse-temurin:21-jdk-jammy as deps
 
 WORKDIR /build
 
@@ -40,7 +40,7 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
 ################################################################################
 
 # Create a new stage for running the application on Apache Tomcat.
-FROM tomcat:11.0-jdk21-openjdk-jammy AS final
+FROM tomcat:11.0-jdk21-temurin-jammy AS final
 
 # Remove default Tomcat apps
 RUN rm -rf /usr/local/tomcat/webapps/*

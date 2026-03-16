@@ -17,6 +17,7 @@ import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -37,6 +38,9 @@ public class UserService {
     }
 
     private boolean checkPassword(String plainPassword, String hashedPassword) {
+        if (hashedPassword != null && hashedPassword.startsWith("$2b$")) {
+            hashedPassword = "$2a$" + hashedPassword.substring(4);
+        }
         return BCrypt.checkpw(plainPassword, hashedPassword);
     }
 
@@ -96,6 +100,8 @@ public class UserService {
             Users user = query.uniqueResult();
 
             if (user != null && checkPassword(password, user.getPassword())) {
+                // If status is null, treat as pending for safety, but existing users were migrated to ACTIVE
+                if (user.getStatus() == null) user.setStatus("PENDING");
                 return user;
             }
 
@@ -549,6 +555,74 @@ public class UserService {
             if (session != null && session.isOpen()) {
                 session.close();
             }
+        }
+    }
+
+    /**
+     * Retrieves all users with a specific role.
+     * Often used by Admins to list all Traders.
+     */
+    public List<Users> getAllUsersByRole(String role) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Query<Users> query = session.createQuery(
+                    "FROM Users WHERE role = :role ORDER BY createdAt DESC",
+                    Users.class);
+            query.setParameter("role", role);
+            return query.list();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Counts users in the system by their account status.
+     * 
+     * @param status the status to count (PENDING, ACTIVE, INACTIVE)
+     * @return the total count
+     */
+    public Long countUsersByStatus(String status) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Query<Long> query = session.createQuery(
+                    "SELECT COUNT(u.id) FROM Users u WHERE u.status = :status",
+                    Long.class);
+            query.setParameter("status", status);
+            return query.uniqueResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0L;
+        }
+    }
+
+    /**
+     * Updates the status of a specific user.
+     * 
+     * @param userId the user to update
+     * @param status the new status
+     * @return true if updated successfully
+     */
+    public boolean updateUserStatus(Long userId, String status) {
+        Session session = null;
+        Transaction transaction = null;
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
+            transaction = session.beginTransaction();
+
+            Users user = session.get(Users.class, userId);
+            if (user == null) return false;
+
+            user.setStatus(status);
+            user.setUpdatedAt(LocalDateTime.now());
+            session.merge(user);
+
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) transaction.rollback();
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (session != null && session.isOpen()) session.close();
         }
     }
 }

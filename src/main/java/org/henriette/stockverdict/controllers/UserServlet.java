@@ -126,7 +126,7 @@ public class UserServlet extends HttpServlet {
         String name     = request.getParameter("name");
         String email    = request.getParameter("email");
         String password = request.getParameter("password");
-        String role     = request.getParameter("role");
+        // String role = request.getParameter("role"); // Disable role selection from request
 
         if (userService.isEmailExists(email)) {
             request.setAttribute("error", "Email already exists");
@@ -141,7 +141,8 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
-        Users user = new Users(name, email, password, role);
+        Users user = new Users(name, email, password, "TRADER"); // Enforce TRADER role
+        user.setStatus("PENDING"); // Enforce PENDING status
         if (userService.registerUser(user)) {
             response.sendRedirect(request.getContextPath() + "/login.jsp?success=registered");
         } else {
@@ -217,6 +218,29 @@ public class UserServlet extends HttpServlet {
         Users user = userService.loginUser(email, password);
 
         if (user != null) {
+            String status = user.getStatus();
+            String role = user.getRole();
+            
+            // Treat null status as ACTIVE for legacy accounts
+            if (status == null) {
+                status = "ACTIVE";
+            }
+            
+            System.out.println("[DEBUG] Login: " + email + " | Role: " + role + " | Status: " + status);
+
+            if ("PENDING".equalsIgnoreCase(status)) {
+                System.out.println("[DEBUG] Access Denied: User " + email + " is PENDING");
+                request.setAttribute("error", "Your account is awaiting administrative approval.");
+                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                return;
+            }
+            if ("INACTIVE".equalsIgnoreCase(status)) {
+                System.out.println("[DEBUG] Access Denied: User " + email + " is INACTIVE");
+                request.setAttribute("error", "Your account has been deactivated. Please contact support.");
+                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                return;
+            }
+
             String otpCode = String.valueOf((int)(Math.random() * 900000) + 100000);
             java.time.LocalDateTime expiry = java.time.LocalDateTime.now().plusMinutes(5);
 
@@ -231,10 +255,11 @@ public class UserServlet extends HttpServlet {
 
                 HttpSession session = request.getSession();
                 session.setAttribute("pendingUserId", user.getId());
-                System.out.println("[LOGIN] Session ID: " + session.getId() + " | pendingUserId: " + user.getId());
+                System.out.println("[DEBUG] Redirecing to verifyOtp.jsp for user ID: " + user.getId() + " | Session ID: " + session.getId());
                 response.sendRedirect(request.getContextPath() + "/verifyOtp.jsp");
             } else {
-                request.setAttribute("error", "System error: Failed to generate and save verification code. Check database connection.");
+                System.out.println("[ERROR] Failed to save OTP for user: " + email);
+                request.setAttribute("error", "System error: Failed to generate and save verification code.");
                 request.getRequestDispatcher("/login.jsp").forward(request, response);
             }
 
@@ -316,7 +341,7 @@ public class UserServlet extends HttpServlet {
 
         String dashboardPage;
         if ("ADMIN".equalsIgnoreCase(user.getRole())) {
-            dashboardPage = "/adminDashboard.jsp";
+            dashboardPage = "/admin/dashboard"; // Redirect to AdminServlet
         } else {
             dashboardPage = "/dashboard";
         }
@@ -471,12 +496,12 @@ public class UserServlet extends HttpServlet {
         if (idParam != null && !idParam.isEmpty()) {
             Long userId = Long.parseLong(idParam);
             if (userService.deleteUser(userId)) {
-                response.sendRedirect(request.getContextPath() + "/adminDashboard.jsp?success=deleted");
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard?success=deleted");
             } else {
-                response.sendRedirect(request.getContextPath() + "/adminDashboard.jsp?error=delete_failed");
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard?error=delete_failed");
             }
         } else {
-            response.sendRedirect(request.getContextPath() + "/adminDashboard.jsp?error=invalid_id");
+            response.sendRedirect(request.getContextPath() + "/admin/dashboard?error=invalid_id");
         }
     }
 }

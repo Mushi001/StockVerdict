@@ -432,4 +432,58 @@ public class SaleService {
             return Collections.emptyList();
         }
     }
+
+    /**
+     * Retrieves the top-selling products by volume across the entire system.
+     */
+    public List<Object[]> getSystemWideTopSellingProducts(int limit) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Query<Object[]> query = session.createQuery(
+                    "SELECT si.product.name, SUM(si.quantity) as totalQty " +
+                            "FROM SaleItem si " +
+                            "GROUP BY si.product.name " +
+                            "ORDER BY totalQty DESC",
+                    Object[].class);
+            query.setMaxResults(limit);
+            return query.list();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Retrieves the top-performing traders by revenue.
+     */
+    public List<Object[]> getSystemWideTopTraders(int limit) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Query<Object[]> query = session.createQuery(
+                    "SELECT s.user.name, SUM(s.totalAmount) as revenue " +
+                            "FROM Sales s " +
+                            "GROUP BY s.user.name " +
+                            "ORDER BY revenue DESC",
+                    Object[].class);
+            query.setMaxResults(limit);
+            return query.list();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Calculates the total revenue generated across the entire system.
+     */
+    public Double getSystemWideTotalRevenue() {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Query<Double> query = session.createQuery(
+                    "SELECT SUM(s.totalAmount) FROM Sales s",
+                    Double.class);
+            Double result = query.uniqueResult();
+            return result != null ? result : 0.0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0.0;
+        }
+    }
 }

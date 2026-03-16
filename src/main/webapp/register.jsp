@@ -335,19 +335,9 @@
         <form action="${pageContext.request.contextPath}/user" method="post">
             <input type="hidden" name="action" value="register"/>
 
-            <div class="form-row">
-                <div class="field">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" name="name" placeholder="John Smith" required/>
-                </div>
-                <div class="field">
-                    <label for="role">Account Role</label>
-                    <div class="select-wrap">
-                        <select id="role" name="role" required>
-                            <option value="TRADER">Trader</option>
-                        </select>
-                    </div>
-                </div>
+            <div class="field">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" placeholder="John Smith" required/>
             </div>
 
             <div class="field">
