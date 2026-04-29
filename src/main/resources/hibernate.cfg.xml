@@ -4,9 +4,9 @@
 <hibernate-configuration>
     <session-factory>
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-        <property name="hibernate.connection.url">postgresql://ep-twilight-butterfly-alc1ff7x-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require</property>
-        <property name="hibernate.connection.username">neondb_owner</property>
-        <property name="hibernate.connection.password">npg_Lq2SKmspk6lF</property>
+        <property name="hibernate.connection.url">DB_URL</property>
+        <property name="hibernate.connection.username">DB_USERNAME</property>
+        <property name="hibernate.connection.password">DB_PASSWORD</property>
         <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
         <property name="hibernate.show_sql">true</property>
         <property name="hibernate.hbm2ddl.auto">update</property>
