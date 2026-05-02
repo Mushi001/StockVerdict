@@ -24,18 +24,26 @@ public class HibernateUtil {
 
             // ======= Environment Variable Overrides =======
             String dbUrl = System.getenv("DB_URL");
-            String dbUser = System.getenv("DB_USER");
-            if (dbUser == null) dbUser = System.getenv("DB_USERNAME"); // Fallback for your .env format
+            if (dbUrl == null || dbUrl.isEmpty()) dbUrl = System.getenv("DATABASE_URL");
+
+            String dbUser = System.getenv("DB_USERNAME");
+            if (dbUser == null || dbUser.isEmpty()) dbUser = System.getenv("DB_USER");
+            
             String dbPassword = System.getenv("DB_PASSWORD");
+            if (dbPassword == null || dbPassword.isEmpty()) dbPassword = System.getenv("DATABASE_PASSWORD");
 
             if (dbUrl != null && !dbUrl.isEmpty()) {
+                // Strip quotes if user accidentally included them in environment variables
+                dbUrl = dbUrl.replace("\"", "").trim();
                 configuration.setProperty("hibernate.connection.url", dbUrl);
-                System.out.println("[Hibernate] Using DB_URL from environment.");
+                System.out.println("[Hibernate] Connection URL initialized.");
             }
             if (dbUser != null && !dbUser.isEmpty()) {
+                dbUser = dbUser.replace("\"", "").trim();
                 configuration.setProperty("hibernate.connection.username", dbUser);
             }
             if (dbPassword != null && !dbPassword.isEmpty()) {
+                dbPassword = dbPassword.replace("\"", "").trim();
                 configuration.setProperty("hibernate.connection.password", dbPassword);
             }
 
