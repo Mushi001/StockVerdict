@@ -263,13 +263,10 @@ public class UserService {
                 config.load(input);
                 input.close();
             } else {
-                System.err.println("Configuration file not found (tried " + localConfig + " and " + defaultConfig + ")");
-                return false;
+                System.out.println("[UserService] Config files not found, falling back to environment variables.");
             }
         } catch (IOException e) {
-            System.err.println("Failed to load configuration");
-            e.printStackTrace();
-            return false;
+            System.err.println("[UserService] Error reading config files, falling back to environment variables.");
         }
 
         String senderEmail    = config.getProperty("SMTP_EMAIL");
