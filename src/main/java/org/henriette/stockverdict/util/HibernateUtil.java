@@ -25,16 +25,22 @@ public class HibernateUtil {
             // ======= Environment Variable Overrides =======
             String dbUrl = System.getenv("DB_URL");
             String dbUser = System.getenv("DB_USER");
+            if (dbUser == null) dbUser = System.getenv("DB_USERNAME"); // Fallback for your .env format
             String dbPassword = System.getenv("DB_PASSWORD");
 
-            if (dbUrl != null) {
+            if (dbUrl != null && !dbUrl.isEmpty()) {
                 configuration.setProperty("hibernate.connection.url", dbUrl);
+                System.out.println("[Hibernate] Using DB_URL from environment.");
             }
-            if (dbUser != null) {
+            if (dbUser != null && !dbUser.isEmpty()) {
                 configuration.setProperty("hibernate.connection.username", dbUser);
             }
-            if (dbPassword != null) {
+            if (dbPassword != null && !dbPassword.isEmpty()) {
                 configuration.setProperty("hibernate.connection.password", dbPassword);
+            }
+
+            if (dbUrl == null) {
+                System.err.println("[Hibernate] WARNING: DB_URL environment variable is missing!");
             }
 
             // ======= Register all annotated entity classes =======
