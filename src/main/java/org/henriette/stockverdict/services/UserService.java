@@ -295,30 +295,24 @@ public class UserService {
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.ssl.protocols", "TLSv1.2");
-        props.put("mail.debug", "true"); // Enable detailed logs
+        props.put("mail.smtp.ssl.enable", "true"); 
         props.put("mail.smtp.host", smtpHost);
-        props.put("mail.smtp.port", smtpPort);
-        props.put("mail.smtp.ssl.trust", smtpHost);
+        props.put("mail.smtp.port", "465");
+        props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+        props.put("mail.debug", "true");
+        props.put("mail.smtp.socketFactory.port", "465");
+        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         props.put("mail.smtp.connectiontimeout", "10000");
         props.put("mail.smtp.timeout", "10000");
-        props.put("mail.smtp.writetimeout", "10000");
 
-        jakarta.mail.Session mailSession =
-                jakarta.mail.Session.getInstance(props,
-                        new Authenticator() {
-                            protected PasswordAuthentication getPasswordAuthentication() {
-                                return new PasswordAuthentication(finalSenderEmail, finalSenderPassword);
-                            }
-                        });
+        jakarta.mail.Session mailSession = jakarta.mail.Session.getInstance(props);
 
         try {
-            Message message = new MimeMessage(mailSession);
+            MimeMessage message = new MimeMessage(mailSession);
             message.setFrom(new InternetAddress(finalSenderEmail));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
             message.setSubject("Your Login OTP - StockVerdict");
-            
+
             String htmlContent = "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; background-color: #f4f7f6; border-radius: 8px;\">"
                     + "<div style=\"text-align: center; margin-bottom: 30px;\">"
                     + "<h1 style=\"color: #2c3e50; margin: 0; font-size: 28px; letter-spacing: 1px;\">StockVerdict</h1>"
@@ -342,7 +336,11 @@ public class UserService {
 
             message.setContent(htmlContent, "text/html; charset=utf-8");
 
-            Transport.send(message);
+            Transport transport = mailSession.getTransport("smtp");
+            transport.connect(smtpHost, finalSenderEmail, finalSenderPassword);
+            transport.sendMessage(message, message.getAllRecipients());
+            transport.close();
+
             System.out.println("OTP email sent successfully to " + recipientEmail);
             return true;
 
