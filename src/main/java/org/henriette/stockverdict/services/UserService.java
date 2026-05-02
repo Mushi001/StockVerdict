@@ -272,16 +272,29 @@ public class UserService {
             return false;
         }
 
-        final String senderEmail    = config.getProperty("SMTP_EMAIL");
-        final String senderPassword = config.getProperty("SMTP_PASSWORD");
-        final String smtpHost       = config.getProperty("SMTP_HOST", "smtp.gmail.com");
-        final String smtpPort       = config.getProperty("SMTP_PORT", "587");
+        String senderEmail    = config.getProperty("SMTP_EMAIL");
+        String senderPassword = config.getProperty("SMTP_PASSWORD");
+        String smtpHost       = config.getProperty("SMTP_HOST");
+        String smtpPort       = config.getProperty("SMTP_PORT");
+
+        // Fallback to environment variables (for production/Render)
+        if (senderEmail == null || senderEmail.isBlank()) senderEmail = System.getenv("SMTP_EMAIL");
+        if (senderPassword == null || senderPassword.isBlank()) senderPassword = System.getenv("SMTP_PASSWORD");
+        if (smtpHost == null || smtpHost.isBlank()) smtpHost = System.getenv("SMTP_HOST");
+        if (smtpPort == null || smtpPort.isBlank()) smtpPort = System.getenv("SMTP_PORT");
+
+        // Defaults if still null
+        if (smtpHost == null || smtpHost.isBlank()) smtpHost = "smtp.gmail.com";
+        if (smtpPort == null || smtpPort.isBlank()) smtpPort = "587";
 
         if (senderEmail == null || senderEmail.isBlank() ||
                 senderPassword == null || senderPassword.isBlank()) {
-            System.err.println("OTP email not sent: missing SMTP_EMAIL / SMTP_PASSWORD in config.properties");
+            System.err.println("[UserService] Error: SMTP_EMAIL or SMTP_PASSWORD not found in config or environment.");
             return false;
         }
+
+        final String finalSenderEmail = senderEmail;
+        final String finalSenderPassword = senderPassword;
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -297,13 +310,13 @@ public class UserService {
                 jakarta.mail.Session.getInstance(props,
                         new Authenticator() {
                             protected PasswordAuthentication getPasswordAuthentication() {
-                                return new PasswordAuthentication(senderEmail, senderPassword);
+                                return new PasswordAuthentication(finalSenderEmail, finalSenderPassword);
                             }
                         });
 
         try {
             Message message = new MimeMessage(mailSession);
-            message.setFrom(new InternetAddress(senderEmail));
+            message.setFrom(new InternetAddress(finalSenderEmail));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
             message.setSubject("Your Login OTP - StockVerdict");
             

@@ -46,8 +46,7 @@ FROM tomcat:11.0-jdk21-temurin-jammy AS final
 RUN rm -rf /usr/local/tomcat/webapps/*
 
 # Copy the WAR from the "package" stage to the webapps directory as ROOT.war
-# Copy your WAR file and give it the old context name
-COPY --from=package build/target/app.war /usr/local/tomcat/webapps/StockVerdict_war_exploded.war
+COPY --from=package build/target/app.war /usr/local/tomcat/webapps/ROOT.war
 
 EXPOSE 8080
 

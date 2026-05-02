@@ -52,13 +52,24 @@ public class UserServlet extends HttpServlet {
                 input = getClass().getClassLoader().getResourceAsStream(defaultConfig);
             }
 
-            if (input == null) {
-                throw new ServletException("Configuration file not found (tried " + localConfig + " and " + defaultConfig + ")");
+            if (input != null) {
+                config.load(input);
+                recaptchaSecretKey = config.getProperty("RECAPTCHA_SECRET_KEY");
+                input.close();
             }
 
-            config.load(input);
-            recaptchaSecretKey = config.getProperty("RECAPTCHA_SECRET_KEY");
-            input.close();
+            // Fallback to environment variable (crucial for Render/Docker)
+            if (recaptchaSecretKey == null || recaptchaSecretKey.isEmpty()) {
+                recaptchaSecretKey = System.getenv("RECAPTCHA_SECRET_KEY");
+            }
+
+            // Only throw error if we still don't have a key
+            if (recaptchaSecretKey == null || recaptchaSecretKey.isEmpty()) {
+                System.err.println("[UserServlet] Warning: RECAPTCHA_SECRET_KEY not found in properties or environment.");
+            } else {
+                System.out.println("[UserServlet] reCAPTCHA initialized successfully.");
+            }
+
         } catch (IOException e) {
             throw new ServletException("Failed to load configuration", e);
         }
