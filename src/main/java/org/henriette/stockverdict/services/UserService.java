@@ -247,6 +247,7 @@ public class UserService {
      * @return true if the email was successfully sent, false otherwise
      */
     public boolean sendOtpEmail(String recipientEmail, String otpCode) {
+        System.out.println("[UserService] Starting email dispatch to: " + recipientEmail);
 
         // Load from config.local.properties (preferred) or config.properties
         Properties config = new Properties();
