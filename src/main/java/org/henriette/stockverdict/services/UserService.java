@@ -249,42 +249,38 @@ public class UserService {
     public boolean sendOtpEmail(String recipientEmail, String otpCode) {
         System.out.println("[UserService] Starting email dispatch to: " + recipientEmail);
 
-        // Load from config.local.properties (preferred) or config.properties
-        Properties config = new Properties();
-        String localConfig = "config.local.properties";
-        String defaultConfig = "config.properties";
-
-        try {
-            InputStream input = getClass().getClassLoader().getResourceAsStream(localConfig);
-            if (input == null) {
-                input = getClass().getClassLoader().getResourceAsStream(defaultConfig);
-            }
-
-            if (input != null) {
-                config.load(input);
-                input.close();
-            } else {
-                System.out.println("[UserService] Config files not found, falling back to environment variables.");
-            }
-        } catch (IOException e) {
-            System.err.println("[UserService] Error reading config files, falling back to environment variables.");
-        }
-
-        String senderEmail    = config.getProperty("SMTP_EMAIL");
-        String senderPassword = config.getProperty("SMTP_PASSWORD");
-        String smtpHost       = config.getProperty("SMTP_HOST");
-        String smtpPort       = config.getProperty("SMTP_PORT");
-
-        // Helper to check if a value is null, blank, or a placeholder (like YOUR_EMAIL_HERE)
+        // Helper to check if a value is null, blank, or a placeholder
         java.util.function.Predicate<String> isMissing = s -> s == null || s.isBlank() || s.contains("YOUR_");
 
-        // Fallback to environment variables (crucial for production/Render)
-        if (isMissing.test(senderEmail)) senderEmail = System.getenv("SMTP_EMAIL");
-        if (isMissing.test(senderPassword)) senderPassword = System.getenv("SMTP_PASSWORD");
-        if (isMissing.test(smtpHost)) smtpHost = System.getenv("SMTP_HOST");
-        if (isMissing.test(smtpPort)) smtpPort = System.getenv("SMTP_PORT");
+        // 1. Try Environment Variables FIRST (highest priority for Render)
+        String senderEmail    = System.getenv("SMTP_EMAIL");
+        String senderPassword = System.getenv("SMTP_PASSWORD");
+        String smtpHost       = System.getenv("SMTP_HOST");
+        String smtpPort       = System.getenv("SMTP_PORT");
 
-        // Defaults if still null/blank
+        // 2. Fallback to config files only if environment variables are missing
+        if (isMissing.test(senderEmail) || isMissing.test(senderPassword)) {
+            Properties config = new Properties();
+            try {
+                InputStream input = getClass().getClassLoader().getResourceAsStream("config.local.properties");
+                if (input == null) {
+                    input = getClass().getClassLoader().getResourceAsStream("config.properties");
+                }
+                if (input != null) {
+                    config.load(input);
+                    input.close();
+                    
+                    if (isMissing.test(senderEmail)) senderEmail = config.getProperty("SMTP_EMAIL");
+                    if (isMissing.test(senderPassword)) senderPassword = config.getProperty("SMTP_PASSWORD");
+                    if (isMissing.test(smtpHost)) smtpHost = config.getProperty("SMTP_HOST");
+                    if (isMissing.test(smtpPort)) smtpPort = config.getProperty("SMTP_PORT");
+                }
+            } catch (IOException e) {
+                System.err.println("[UserService] Error reading config files: " + e.getMessage());
+            }
+        }
+
+        // 3. Final defaults if still null/blank
         if (smtpHost == null || smtpHost.isBlank()) smtpHost = "smtp.gmail.com";
         if (smtpPort == null || smtpPort.isBlank()) smtpPort = "587";
 

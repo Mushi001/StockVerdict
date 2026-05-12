@@ -40,39 +40,36 @@ public class UserServlet extends HttpServlet {
      */
     @Override
     public void init() throws ServletException {
-        Properties config = new Properties();
-        String localConfig = "config.local.properties";
-        String defaultConfig = "config.properties";
+        // 1. Try Environment Variable FIRST (highest priority for Render)
+        recaptchaSecretKey = System.getenv("RECAPTCHA_SECRET_KEY");
 
-        try {
-            // Try local first
-            InputStream input = getClass().getClassLoader().getResourceAsStream(localConfig);
-            if (input == null) {
-                // Fallback to default
-                input = getClass().getClassLoader().getResourceAsStream(defaultConfig);
+        // 2. Fallback to properties files only if environment variable is missing
+        if (recaptchaSecretKey == null || recaptchaSecretKey.isBlank() || recaptchaSecretKey.contains("YOUR_")) {
+            Properties config = new Properties();
+            try {
+                InputStream input = getClass().getClassLoader().getResourceAsStream("config.local.properties");
+                if (input == null) {
+                    input = getClass().getClassLoader().getResourceAsStream("config.properties");
+                }
+
+                if (input != null) {
+                    config.load(input);
+                    String propKey = config.getProperty("RECAPTCHA_SECRET_KEY");
+                    if (propKey != null && !propKey.isBlank() && !propKey.contains("YOUR_")) {
+                        recaptchaSecretKey = propKey;
+                    }
+                    input.close();
+                }
+            } catch (IOException e) {
+                System.err.println("[UserServlet] Warning: Failed to load configuration files: " + e.getMessage());
             }
+        }
 
-            if (input != null) {
-                config.load(input);
-                recaptchaSecretKey = config.getProperty("RECAPTCHA_SECRET_KEY");
-                input.close();
-            }
-
-            // Fallback to environment variable (crucial for Render/Docker)
-            // Handle both null/empty and placeholder values
-            if (recaptchaSecretKey == null || recaptchaSecretKey.isBlank() || recaptchaSecretKey.contains("YOUR_")) {
-                recaptchaSecretKey = System.getenv("RECAPTCHA_SECRET_KEY");
-            }
-
-            // Only throw error if we still don't have a key
-            if (recaptchaSecretKey == null || recaptchaSecretKey.isBlank()) {
-                System.err.println("[UserServlet] Warning: RECAPTCHA_SECRET_KEY not found in properties or environment.");
-            } else {
-                System.out.println("[UserServlet] reCAPTCHA initialized successfully.");
-            }
-
-        } catch (IOException e) {
-            throw new ServletException("Failed to load configuration", e);
+        // Only throw error if we still don't have a key
+        if (recaptchaSecretKey == null || recaptchaSecretKey.isBlank()) {
+            System.err.println("[UserServlet] Warning: RECAPTCHA_SECRET_KEY not found in properties or environment.");
+        } else {
+            System.out.println("[UserServlet] reCAPTCHA initialized successfully.");
         }
     }
 
