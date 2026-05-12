@@ -59,12 +59,13 @@ public class UserServlet extends HttpServlet {
             }
 
             // Fallback to environment variable (crucial for Render/Docker)
-            if (recaptchaSecretKey == null || recaptchaSecretKey.isEmpty()) {
+            // Handle both null/empty and placeholder values
+            if (recaptchaSecretKey == null || recaptchaSecretKey.isBlank() || recaptchaSecretKey.contains("YOUR_")) {
                 recaptchaSecretKey = System.getenv("RECAPTCHA_SECRET_KEY");
             }
 
             // Only throw error if we still don't have a key
-            if (recaptchaSecretKey == null || recaptchaSecretKey.isEmpty()) {
+            if (recaptchaSecretKey == null || recaptchaSecretKey.isBlank()) {
                 System.err.println("[UserServlet] Warning: RECAPTCHA_SECRET_KEY not found in properties or environment.");
             } else {
                 System.out.println("[UserServlet] reCAPTCHA initialized successfully.");

@@ -275,13 +275,16 @@ public class UserService {
         String smtpHost       = config.getProperty("SMTP_HOST");
         String smtpPort       = config.getProperty("SMTP_PORT");
 
-        // Fallback to environment variables (for production/Render)
-        if (senderEmail == null || senderEmail.isBlank()) senderEmail = System.getenv("SMTP_EMAIL");
-        if (senderPassword == null || senderPassword.isBlank()) senderPassword = System.getenv("SMTP_PASSWORD");
-        if (smtpHost == null || smtpHost.isBlank()) smtpHost = System.getenv("SMTP_HOST");
-        if (smtpPort == null || smtpPort.isBlank()) smtpPort = System.getenv("SMTP_PORT");
+        // Helper to check if a value is null, blank, or a placeholder (like YOUR_EMAIL_HERE)
+        java.util.function.Predicate<String> isMissing = s -> s == null || s.isBlank() || s.contains("YOUR_");
 
-        // Defaults if still null
+        // Fallback to environment variables (crucial for production/Render)
+        if (isMissing.test(senderEmail)) senderEmail = System.getenv("SMTP_EMAIL");
+        if (isMissing.test(senderPassword)) senderPassword = System.getenv("SMTP_PASSWORD");
+        if (isMissing.test(smtpHost)) smtpHost = System.getenv("SMTP_HOST");
+        if (isMissing.test(smtpPort)) smtpPort = System.getenv("SMTP_PORT");
+
+        // Defaults if still null/blank
         if (smtpHost == null || smtpHost.isBlank()) smtpHost = "smtp.gmail.com";
         if (smtpPort == null || smtpPort.isBlank()) smtpPort = "587";
 
@@ -294,17 +297,26 @@ public class UserService {
         final String finalSenderEmail = senderEmail;
         final String finalSenderPassword = senderPassword;
 
+        System.out.println("[UserService] Using SMTP Host: " + smtpHost + " | Port: " + smtpPort + " | Sender: " + senderEmail);
+
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.ssl.enable", "true"); 
         props.put("mail.smtp.host", smtpHost);
-        props.put("mail.smtp.port", "465");
-        props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+        props.put("mail.smtp.port", smtpPort);
         props.put("mail.debug", "true");
-        props.put("mail.smtp.socketFactory.port", "465");
-        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         props.put("mail.smtp.connectiontimeout", "10000");
         props.put("mail.smtp.timeout", "10000");
+
+        // Dynamic configuration based on port
+        if ("465".equals(smtpPort)) {
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.socketFactory.port", "465");
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
+        } else {
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
+        }
 
         jakarta.mail.Session mailSession = jakarta.mail.Session.getInstance(props);
 
