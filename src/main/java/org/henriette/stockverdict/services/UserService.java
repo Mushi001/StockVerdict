@@ -253,64 +253,79 @@ public class UserService {
         java.util.function.Predicate<String> isMissing = s -> s == null || s.isBlank() || s.contains("YOUR_");
 
         // 1. Try Environment Variables FIRST (highest priority for Render)
-        String senderEmail    = System.getenv("SMTP_EMAIL");
-        String senderPassword = System.getenv("SMTP_PASSWORD");
-        String smtpHost       = System.getenv("SMTP_HOST");
-        String smtpPort       = System.getenv("SMTP_PORT");
+        String envEmail = System.getenv("SMTP_EMAIL");
+        String envPass  = System.getenv("SMTP_PASSWORD");
+        String envHost  = System.getenv("SMTP_HOST");
+        String envPort  = System.getenv("SMTP_PORT");
+
+        System.out.println("[UserService] Env check - EMAIL: " + (envEmail != null ? "Found" : "Missing") 
+                + " | PASS: " + (envPass != null ? "Found" : "Missing") 
+                + " | PORT: " + (envPort != null ? envPort : "Missing"));
+
+        String senderEmail    = envEmail;
+        String senderPassword = envPass;
+        String smtpHost       = envHost;
+        String smtpPort       = envPort;
 
         // 2. Fallback to config files only if environment variables are missing
         if (isMissing.test(senderEmail) || isMissing.test(senderPassword)) {
+            System.out.println("[UserService] Some env vars missing, checking config files...");
             Properties config = new Properties();
-            try {
-                InputStream input = getClass().getClassLoader().getResourceAsStream("config.local.properties");
-                if (input == null) {
-                    input = getClass().getClassLoader().getResourceAsStream("config.properties");
+            try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.local.properties")) {
+                InputStream actualInput = input;
+                if (actualInput == null) {
+                    actualInput = getClass().getClassLoader().getResourceAsStream("config.properties");
                 }
-                if (input != null) {
-                    config.load(input);
-                    input.close();
-                    
+                
+                if (actualInput != null) {
+                    config.load(actualInput);
                     if (isMissing.test(senderEmail)) senderEmail = config.getProperty("SMTP_EMAIL");
                     if (isMissing.test(senderPassword)) senderPassword = config.getProperty("SMTP_PASSWORD");
                     if (isMissing.test(smtpHost)) smtpHost = config.getProperty("SMTP_HOST");
                     if (isMissing.test(smtpPort)) smtpPort = config.getProperty("SMTP_PORT");
+                    System.out.println("[UserService] Loaded from config - EMAIL: " + senderEmail + " | PORT: " + smtpPort);
+                } else {
+                    System.out.println("[UserService] No config files found in classpath.");
                 }
             } catch (IOException e) {
-                System.err.println("[UserService] Error reading config files: " + e.getMessage());
+                System.err.println("[UserService] Error reading config: " + e.getMessage());
             }
         }
 
-        // 3. Final defaults if still null/blank
+        // 3. Final defaults
         if (smtpHost == null || smtpHost.isBlank()) smtpHost = "smtp.gmail.com";
         if (smtpPort == null || smtpPort.isBlank()) smtpPort = "587";
 
-        if (senderEmail == null || senderEmail.isBlank() ||
-                senderPassword == null || senderPassword.isBlank()) {
-            System.err.println("[UserService] Error: SMTP_EMAIL or SMTP_PASSWORD not found in config or environment.");
+        // 4. Final validation before proceeding
+        if (isMissing.test(senderEmail) || isMissing.test(senderPassword)) {
+            System.err.println("[UserService] CRITICAL: SMTP_EMAIL or SMTP_PASSWORD is still missing or placeholder!");
             return false;
         }
 
         final String finalSenderEmail = senderEmail;
         final String finalSenderPassword = senderPassword;
 
-        System.out.println("[UserService] Using SMTP Host: " + smtpHost + " | Port: " + smtpPort + " | Sender: " + senderEmail);
+        System.out.println("[UserService] DISPATCH: Host=" + smtpHost + ", Port=" + smtpPort + ", User=" + senderEmail);
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.host", smtpHost);
         props.put("mail.smtp.port", smtpPort);
         props.put("mail.debug", "true");
-        props.put("mail.smtp.connectiontimeout", "10000");
-        props.put("mail.smtp.timeout", "10000");
+        props.put("mail.smtp.connectiontimeout", "15000");
+        props.put("mail.smtp.timeout", "15000");
+        props.put("mail.smtp.writetimeout", "15000");
 
-        // Dynamic configuration based on port
         if ("465".equals(smtpPort)) {
             props.put("mail.smtp.ssl.enable", "true");
             props.put("mail.smtp.socketFactory.port", "465");
             props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.put("mail.smtp.socketFactory.fallback", "false");
             props.put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
+            props.put("mail.smtp.ssl.checkserveridentity", "true");
         } else {
             props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.starttls.required", "true");
             props.put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
         }
 
