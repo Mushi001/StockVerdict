@@ -250,27 +250,18 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
-            String otpCode = String.valueOf((int)(Math.random() * 900000) + 100000);
-            java.time.LocalDateTime expiry = java.time.LocalDateTime.now().plusMinutes(5);
+            // Direct login without OTP
+            HttpSession session = request.getSession();
+            session.setAttribute("currentUser", user);
+            session.setAttribute("userId", user.getId());
 
-            if (userService.saveOtp(user, otpCode, expiry)) {
-                boolean emailSent = userService.sendOtpEmail(user.getEmail(), otpCode);
-
-                if (!emailSent) {
-                    request.setAttribute("error", "Unable to send OTP email right now. Please configure SMTP settings.");
-                    request.getRequestDispatcher("/login.jsp").forward(request, response);
-                    return;
-                }
-
-                HttpSession session = request.getSession();
-                session.setAttribute("pendingUserId", user.getId());
-                System.out.println("[DEBUG] Redirecing to verifyOtp.jsp for user ID: " + user.getId() + " | Session ID: " + session.getId());
-                response.sendRedirect(request.getContextPath() + "/verifyOtp.jsp");
+            String dashboardPage;
+            if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+                dashboardPage = "/admin/dashboard"; // Redirect to AdminServlet
             } else {
-                System.out.println("[ERROR] Failed to save OTP for user: " + email);
-                request.setAttribute("error", "System error: Failed to generate and save verification code.");
-                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                dashboardPage = "/dashboard";
             }
+            response.sendRedirect(request.getContextPath() + dashboardPage);
 
         } else {
             request.setAttribute("error", "Invalid email or password");
